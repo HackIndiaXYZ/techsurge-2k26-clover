@@ -766,6 +766,36 @@ def build_demo_profile_lakshmi() -> Profile:
     return profile
 
 
+def build_demo_profile_thin_file() -> Profile:
+    """Hand-tuned demo profile: a short-history (4-11 month) profile with a
+    fixed seed, dedicated to the frontend's thin_file_002 demo id.
+
+    Deliberately NOT the same file as data/sample_profile.json. That file is
+    picked as "whichever short-history, non-cash-heavy profile happens to
+    come first" in main()'s bulk-generation loop -- deterministic under a
+    fixed --seed, but its exact identity is an accident of loop order, not a
+    pinned choice, and would silently change if the bulk generation logic or
+    edge-case counts ever changed. A demo id a frontend hardcodes and a demo
+    tests against needs a stable identity independent of that, the same way
+    build_demo_profile_lakshmi/ramesh_carpentry/dormancy_gap all use their
+    own fixed rng seed rather than being sampled from the bulk population.
+    """
+    rng = random.Random(121)  # lands on 5 months of history -> NOT_ASSESSABLE
+    tier = HealthTier.STABLE
+    archetype = Archetype.KIRANA_STORE
+
+    profile = build_profile(
+        rng,
+        profile_index=0,
+        archetype=archetype,
+        tier=tier,
+        cash_heavy=False,
+        short_history=True,
+    )
+    profile.meta.profile_id = "demo_thin_file"
+    return profile
+
+
 def build_demo_profile_ramesh_carpentry() -> Profile:
     """Hand-tuned demo profile: a stable, ordinary 30-month history.
 
@@ -887,6 +917,10 @@ def main() -> None:
     demo_json = demo.model_dump_json(indent=2, exclude_none=False)
     (args.out_dir / "demo_lakshmi.json").write_text(demo_json)
 
+    thin_file = build_demo_profile_thin_file()
+    thin_file_json = thin_file.model_dump_json(indent=2, exclude_none=False)
+    (args.out_dir / "demo_thin_file.json").write_text(thin_file_json)
+
     ramesh = build_demo_profile_ramesh_carpentry()
     ramesh_json = ramesh.model_dump_json(indent=2, exclude_none=False)
     (args.out_dir / "demo_ramesh_carpentry.json").write_text(ramesh_json)
@@ -898,6 +932,7 @@ def main() -> None:
     # Committed reference copies (reuse the JSON already serialized above).
     committed_dir = REPO_ROOT / "data"
     (committed_dir / "demo_profile_lakshmi.json").write_text(demo_json)
+    (committed_dir / "demo_profile_thin_file.json").write_text(thin_file_json)
     (committed_dir / "demo_profile_ramesh_carpentry.json").write_text(ramesh_json)
     (committed_dir / "demo_profile_dormancy_gap.json").write_text(dormancy_json)
     if sample_profile_json is not None:
