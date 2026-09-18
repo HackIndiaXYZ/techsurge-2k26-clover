@@ -192,3 +192,354 @@ used live in the pitch — it's tuned to visibly look like a steady, growing
 business with a clear festival-season spike when its monthly totals are
 printed or plotted, not just to statistically pass the generator's own
 tier logic.
+
+---
+
+# Feature extraction, sufficiency and labels
+
+Everything below documents the second stage of the pipeline: turning a profile
+into 12 features, deciding whether it can be scored at all, and deriving the
+held-out ground-truth label. No scoring or model training happens here.
+
+## The leakage boundary
+
+This is the rule the rest of this stage is built around:
+
+| Months | Window | Who may read it |
+|---|---|---|
+| 1–24 | `transactions_seen` | `feature_engine.py` only |
+| 25–30 | `transactions_holdout` | `label_engine.py` only |
+
+A feature that can see the held-out window produces a model that validates
+brilliantly and fails in production, so the boundary is **enforced, not
+trusted**. `backend/common/windows.py::assert_within_window` raises
+`LeakageError` if either engine is handed a transaction outside its permitted
+range, and each engine calls it before computing anything.
+
+`feature_engine` and `label_engine` never import each other. Their shared
+money definitions live in `backend/common/cashflow.py`, which is a set of pure
+functions with no opinion about which months it is given.
+
+**The one value that crosses the boundary, and why it is safe.** The label
+needs the indicative EMI, which is defined from months 1–24. Rather than
+recomputing it, `derive_label(profile, indicative_emi)` takes it as a plain
+number from the caller. This is what a lender actually has — the EMI is sized
+up front from the history in hand — and it keeps the label engine from ever
+reading the seen window.
+
+Two kinds of test defend this:
+
+- **Tripwire tests** smuggle a held-out transaction into the seen list and
+  assert `LeakageError` is raised.
+- **An invariance test** mutates the held-out window violently (amounts ×1000,
+  window emptied, replaced with a single large cash transaction) and asserts
+  that *not one of the 12 feature values moves*. This is the test that catches
+  a leak which keeps its dates tidy and slips past the tripwire.
+
+A control test asserts the label *does* change with the held-out window, so
+the invariance test cannot pass trivially.
+
+## The 12 features
+
+All computed from months 1–24 only. Grouped by the six families in
+`FEATURE_FAMILIES`, which downstream scoring reuses to populate the API
+contract's `reason_codes.feature` values.
+
+| Family | Feature | Definition |
+|---|---|---|
+| Regularity | `pct_weeks_with_income` | Share of calendar weeks in the window containing at least one customer inflow. |
+| | `income_coefficient_of_variation` | Sample standard deviation of monthly income ÷ mean monthly income. |
+| | `longest_dry_streak_days` | Longest unbroken run of days with no trading income, including leading and trailing silence. |
+| Growth | `trend_last_6_months` | Last 6 months vs **the same 6 calendar months a year earlier**, as a fraction. See the seasonality note below. |
+| | `year_over_year_change` | Months 13–24 income vs months 1–12, as a fraction. Needs 24 months. |
+| Discipline | `expense_to_income_ratio` | Total operating outflows ÷ total business income. |
+| | `ontime_bill_payment_rate` | Share of rent/utility bills paid by the 7th of the month. |
+| Resilience | `cash_buffer_days` | Median monthly surplus ÷ average daily expense. Flow-derived proxy — the payload has no balance field. Negative means the typical month burns cash. |
+| | `worst_monthly_dip_pct` | (median monthly income − worst month) ÷ median. 1.0 means a month earned nothing. |
+| Affordability | `months_would_cover_emi_of_last_24` | **Flagship.** Count of the 24 months where income ≥ indicative EMI + that month's essential expenses. |
+| Trail | `digital_share` | Share of transaction value on UPI/NEFT/card/cheque. |
+| | `cash_share` | Share of transaction value in cash. |
+
+### Why `trend_last_6_months` is season-matched
+
+These businesses are strongly seasonal by construction — a street food vendor's
+monsoon is always weaker than its festival season. A raw 6-month slope
+therefore reports whichever season the window happens to end in. On this
+dataset it scored the visibly-growing demo profile at **−3%**, purely because
+months 19–24 end in the monsoon.
+
+So with 18+ months of history the feature compares the last 6 months against
+the same 6 calendar months a year earlier — this monsoon against last monsoon.
+The demo profile then reads **+17%**, which matches what the plotted cashflow
+actually does. Below 18 months that comparison is impossible and it falls back
+to a normalised least-squares slope, which *is* seasonality-exposed; that
+fallback affects only short-history profiles, which are already gated to
+`LOW_CONFIDENCE` or `NOT_ASSESSABLE`.
+
+### The flagship is a count, and must be normalized before comparing
+
+`months_would_cover_emi_of_last_24` is an **absolute count**, because the API
+contract fixes it as an `int`. It is therefore bounded by how much history a
+profile has: a business that covered the EMI in **all 11 of its 11 months**
+scores 11, which sits below a 24-month business that missed four.
+
+Ranking profiles on the raw count would penalize a thin file for being thin —
+the exact exclusion this project exists to undo. Downstream scoring must
+either compare only within the `FULL` cohort (all of which have the same
+24-month window) or divide by the window length. The denominator travels with
+the feature in the feature table as `sufficiency_months_available`, so the rate
+is recoverable without adding a thirteenth feature.
+
+### Noise and reversals
+
+Every money calculation excludes the generator's `batch_settlement` and
+`rounding_adjustment` artifacts, so a handful of rupee-scale entries can never
+register as a week of trading or inflate a ratio. `upi_reversal` is **not**
+excluded — a reversal is a real correction, and is netted off the transaction
+it reverses (a reversed customer inflow nets business income back to zero).
+
+Because that netting only works when both halves are present, the generator
+guarantees a reversal is never separated from its original. A reversal
+normally lands on the same day or the next day, but falls back to the same day
+whenever the later date would run past the end of the history, land inside a
+data gap, or **cross the seen/held-out split** — which would otherwise strand
+a correction to seen-window activity on the held-out side of the boundary and
+depress the first held-out month's income. Gap windows are likewise decided
+before noise is injected, so noise never refills a gap and a gap never removes
+one half of a pair.
+
+### Nulls are deliberate
+
+A feature that is genuinely undefined returns `null`, not a fabricated zero.
+Across the 521 profiles:
+
+| Feature | Nulls | Why |
+|---|---|---|
+| `year_over_year_change` | 15 (2.9%) | Needs 24 months; these are the 15 short-history profiles. |
+| `trend_last_6_months` | 5 (1.0%) | Needs 6 months; these have 4–5. |
+
+Every other feature, including the flagship, computes for all 521 profiles.
+
+## Sufficiency gate
+
+Runs **before** any scoring is attempted. A thin file must come back as "we
+cannot assess this" rather than as a low score — a low score reads as *this
+business is bad* when the truth is *we do not have enough of their history
+yet*, and conflating the two is exactly how thin-file businesses get locked
+out of credit.
+
+| Outcome | Condition |
+|---|---|
+| `NOT_ASSESSABLE` | < 6 months of history **OR** < 8 transactions/month |
+| `LOW_CONFIDENCE` | 6–12 months of history **OR** 8–15 transactions/month |
+| `FULL` | Everything else |
+
+Either condition alone is enough to gate: a long history cannot rescue a
+sparse trail, and a dense trail cannot rescue a short history.
+
+**These thresholds are this prototype's own design choice. They are not drawn
+from any regulatory standard or published methodology.** The reasoning:
+
+- **Why 6 months and not 3?** These businesses are strongly seasonal, and both
+  the monsoon dip and the festival spike last roughly a quarter. A 3-month
+  window can sit entirely inside one of them, so it measures the season rather
+  than the business — a vendor assessed across a single festival looks
+  exceptional, and the same vendor assessed across a single monsoon looks like
+  it is failing. Six months is the shortest window that necessarily spans more
+  than one seasonal regime.
+- **Why 12 months for full confidence?** Twelve months closes a full seasonal
+  cycle, so every month can be compared against its own counterpart. Below
+  that, growth and volatility features are still measurable but are partly
+  reporting where in the year the window happened to fall — hence "low
+  confidence" rather than "not assessable".
+- **Why ~8 transactions/month?** Below roughly two transactions a week there is
+  no rhythm left to measure: regularity, dry streaks and volatility collapse
+  into noise, and a single missed week swings them wildly.
+- **Why 15 for full confidence?** Between 8 and 15 a month the trail is real
+  but thin. Features compute, but each rests on few enough observations that a
+  couple of missing entries materially move them.
+
+Density counts **only real business transactions** — settlement sweeps and
+rounding artifacts are excluded, so a trail cannot clear the density bar on
+noise alone.
+
+**Cash-heavy is not a deficiency.** All 15 planted cash-heavy profiles pass the
+gate as `FULL`. They have plenty of transactions; those transactions are simply
+in cash. Gating them would rebuild the exclusion this project exists to undo.
+
+### How the gate lands on this dataset
+
+| Outcome | Profiles |
+|---|---|
+| `FULL` | 506 |
+| `LOW_CONFIDENCE` | 10 |
+| `NOT_ASSESSABLE` | 5 |
+
+All 15 gated profiles are exactly the 15 short-history edge cases planted in
+Y1 — none reaches `FULL`. Note that on this dataset the gate is driven
+**entirely by the months rule**: the sparsest profile in the whole set is 27.9
+transactions/month, far above the 8/15 density thresholds, because Y1 planted
+short-history and cash-heavy edge cases but no low-density ones. The density
+branch is therefore covered by unit tests using synthetic sparse profiles
+rather than by the generated data.
+
+## Label definition
+
+Derived from the held-out window (months 25–30) only, and behaviourally
+grounded rather than an arbitrary cutoff.
+
+1. **Indicative EMI** = 20% of median monthly income over months 1–24.
+2. **Essential expenses** = the profile's *actual* recurring outflows —
+   `utility`, `rent` and `supplier` counterparties — as they appear in the data
+   for each held-out month.
+3. For each of the 6 held-out months, ask the question the borrower actually
+   faces: after the month's essential running costs, was there enough income
+   left to service the EMI?
+
+   ```
+   covered(month)  ⟺  income(month) ≥ indicative_emi + essentials(month)
+   ```
+
+4. **Label = 1 ("default")** if that fails in **2 or more** of the 6 months,
+   otherwise **0**.
+
+**Why 2 months and not 1?** One shortfall is a normal shock for a seasonal
+micro-business — an illness, a monsoon week, a broken cart. Branding that a
+default would mislabel most of the healthy population. Two or more is a
+pattern of being unable to carry the obligation.
+
+The same EMI definition drives the flagship
+`months_would_cover_emi_of_last_24` feature, evaluated over months 1–24 instead
+of 25–30, so the feature and the label measure the same thing at two different
+points in time.
+
+### Two edge cases worth stating explicitly
+
+**A business that stopped trading entirely is a default, not an absence.** If
+the held-out window exists but contains no transactions at all, that is the
+most severe default there is — six months of zero income against a live
+obligation. It is labeled 1. Treating an empty window as "unlabelable" would
+silently drop the worst cases from validation and bias the measured default
+rate downward.
+
+**A business with no measurable income in months 1–24 is unlabelable.** The
+indicative EMI would be zero, and the coverage test would collapse into
+`income ≥ essentials` — labeling a dead business as certain to repay. No lender
+would size an obligation against no income, so `derive_label` returns `None`.
+
+**Short-history profiles cannot be labeled** either: with no held-out window
+there is nothing to label, so those 15 profiles are excluded from validation
+rather than guessed at.
+
+### Label distribution
+
+| | Count | Share |
+|---|---|---|
+| No default (0) | 456 | 90.1% |
+| Default (1) | 50 | 9.9% |
+| Unlabelable | 15 | — |
+
+The label was never shown the latent health tier, but recovers it cleanly,
+which is the main evidence that it measures something real:
+
+| Latent tier | n | Default rate |
+|---|---|---|
+| thriving | 181 | 0.6% |
+| stable | 165 | 1.2% |
+| struggling | 93 | 14.0% |
+| failing | 67 | 50.7% |
+
+The classes are imbalanced (9.9% positive), which is realistic for a lending
+portfolio but means the modeling stage should use stratified splits and rank
+metrics such as AUC rather than accuracy.
+
+## Fairness by design
+
+A credit model built on alternative data can launder a demographic proxy into
+a score without anyone intending it — and once it is in the training data it is
+nearly impossible to spot by looking at the score. So the prohibition is
+structural: `feature_engine.py` carries an explicit `EXCLUDED_FIELDS` list, and
+`backend/tests/test_fairness.py` parses the AST of every module on the feature
+path and fails the build if any banned name is read as an attribute.
+
+**Present in the schema, excluded from features:**
+
+| Field | Why |
+|---|---|
+| `latent_health_tier` | Generator ground truth — using it would be self-fulfilling label leakage, not a signal a lender could observe. |
+| `is_cash_heavy_edge_case` | Generator internal. |
+| `is_short_history_edge_case` | Generator internal. |
+| `note` | Free-text memo carrying counterparty VPA handles and personal names, which proxy for identity, community and geography. |
+
+**Reserved — must never be introduced as features:** any geography field
+(`pincode`, `postal_code`, `district`, `state`, `city`, `village`, `ward`,
+`latitude`, `longitude`, `address`, `region`); any demographic field
+(`gender`, `sex`, `age`, `date_of_birth`, `caste`, `religion`, `community`,
+`language`, `mother_tongue`, `marital_status`, `education`, `disability`); any
+identity document (`aadhaar`, `pan`, `voter_id`, `borrower_name`,
+`applicant_name`); and merchant classification (`merchant_category_code`,
+`mcc`, `merchant_category`, `merchant_name`, `business_name`), since MCC-style
+codes proxy for the demographics of who runs and who patronises a given trade.
+
+A test asserts the "present in schema" half really does still exist on the
+models and the "reserved" half really does not, so the list cannot rot into
+names that no longer mean anything.
+
+`digital_share` and `cash_share` are computed and stored but are
+**informational only and must never be used to penalize cash-heavy
+businesses.** A cash-heavy street vendor is not a worse credit risk for being
+cash-heavy. They exist so the product can describe the quality of a trail and
+explain a `LOW_CONFIDENCE` outcome — not to move a score downward. A test
+asserts that two profiles with identical cashflow and opposite channel mixes
+receive the same sufficiency outcome and the same affordability result.
+
+`build_feature_table.py` is deliberately outside the AST scan: it reads
+`latent_health_tier` on purpose, to write the gitignored validation file. That
+it keeps ground truth *out* of the feature table is asserted separately.
+
+## Worked example: `demo_profile_lakshmi`
+
+A `thriving` `street_food_vendor` with 24 months of seen history.
+
+| Family | Feature | Value | Reading |
+|---|---|---|---|
+| Regularity | `pct_weeks_with_income` | 1.00 | Earned in every single week of the window. |
+| | `income_coefficient_of_variation` | 0.41 | Variable, but that is the festival/monsoon cycle, not instability. |
+| | `longest_dry_streak_days` | 6 | Longest silence is one short data gap. |
+| Growth | `trend_last_6_months` | +0.19 | 19% up on the same 6 months a year earlier. |
+| | `year_over_year_change` | +0.19 | 19% up year on year — consistent with the above. |
+| Discipline | `expense_to_income_ratio` | 0.37 | Keeps ~63 paise of every rupee earned. |
+| | `ontime_bill_payment_rate` | 1.00 | Every rent and utility bill paid by the 7th. |
+| Resilience | `cash_buffer_days` | 46.0 | Typical monthly surplus covers ~46 days of running costs. |
+| | `worst_monthly_dip_pct` | 0.50 | Worst month ran 50% below typical — the monsoon. |
+| Affordability | `months_would_cover_emi_of_last_24` | **24** | Could have serviced the EMI in all 24 of its 24 months. |
+| Trail | `digital_share` | 0.86 | Mostly digital — informational only. |
+| | `cash_share` | 0.14 | |
+
+**Sufficiency:** `FULL` — 24 months of history at 244.0 transactions/month.
+
+**Held-out check (not a feature):** indicative EMI ₹11,298; 0 of the 6 held-out
+months fell short, so the label is **0 (no default)** — which is what the
+feature profile above would lead you to expect.
+
+## Feature table
+
+`python3 -m backend.scripts.build_feature_table` writes two files, and the
+separation between them is the point:
+
+- **`data/feature_table.csv`** — committed, 521 rows. `profile_id`, the 12
+  features, the sufficiency outcome, and the two figures the gate ran on
+  (`sufficiency_months_available`, `sufficiency_transactions_per_month`).
+  **This is the only file a model may read.** Nulls are written as empty cells.
+- **`data/labels_holdout.csv`** — **gitignored**, 506 rows. The held-out label,
+  months failed, the indicative EMI and the latent health tier. **Validation
+  only; never a model input.**
+
+The script refuses to run if any ground-truth column appears in the feature
+table schema, so the two can never quietly merge.
+
+CSV rather than Parquet: the table is ~520 rows, and CSV keeps the pipeline
+dependency-free (standard library only, beyond the pydantic the generator
+already required) so any teammate can run it without setting up an environment.
+The feature table is small enough (~105 KB) to commit, unlike the bulk profile
+data, which stays gitignored and regenerable.

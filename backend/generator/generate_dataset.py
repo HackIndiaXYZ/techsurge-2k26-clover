@@ -511,15 +511,57 @@ def generate_expense_days(
     return txs
 
 
+def _in_gap(day: date, gap_windows: list[tuple[date, date]]) -> bool:
+    return any(gs <= day <= ge for gs, ge in gap_windows)
+
+
+def _reversal_day_for(
+    original: date,
+    candidate: date,
+    end: date,
+    gap_windows: list[tuple[date, date]],
+    split_date: date | None,
+) -> date:
+    """Place a reversal so it stays paired with the transaction it reverses.
+
+    A reversal must never end up separated from its original, because each one
+    alone is a phantom: an orphaned reversal reads as an unexplained negative
+    entry, and an original whose reversal was dropped reads as income that was
+    never actually received.
+
+    So a next-day reversal falls back to same-day (always valid, and an instant
+    UPI failure reversal is realistic) whenever the later date would:
+      * run past the end of the history,
+      * land inside a data gap, where its original cannot be, or
+      * cross the seen/held-out split, which would strand a correction to
+        seen-window activity on the held-out side of the boundary.
+    """
+    if candidate > end:
+        return original
+    if split_date is not None and original < split_date <= candidate:
+        return original
+    if _in_gap(candidate, gap_windows):
+        return original
+    return candidate
+
+
 def inject_noise(
-    rng: random.Random, txs: list[RawTx], start: date, end: date
+    rng: random.Random,
+    txs: list[RawTx],
+    start: date,
+    end: date,
+    gap_windows: list[tuple[date, date]] | None = None,
+    split_date: date | None = None,
 ) -> list[RawTx]:
+    gap_windows = gap_windows or []
     out = list(txs)
 
     # Failed/reversed UPI transactions.
     upi_txs = [t for t in txs if t.channel == Channel.UPI]
     for t in rng.sample(upi_txs, k=min(len(upi_txs), max(1, len(upi_txs) // 150))):
-        reversal_day = min(t.d + timedelta(days=rng.choice([0, 1])), end)
+        reversal_day = _reversal_day_for(
+            t.d, t.d + timedelta(days=rng.choice([0, 1])), end, gap_windows, split_date
+        )
         rev_direction = Direction.OUT if t.direction == Direction.IN else Direction.IN
         out.append(
             RawTx(
@@ -536,7 +578,7 @@ def inject_noise(
     # Midnight batch-settlement sweeps: small aggregator adjustment entries.
     day = start
     while day <= end:
-        if rng.random() < 0.03:
+        if rng.random() < 0.03 and not _in_gap(day, gap_windows):
             direction = weighted_choice(rng, [Direction.IN, Direction.OUT], [0.5, 0.5])
             out.append(
                 RawTx(
@@ -554,7 +596,7 @@ def inject_noise(
     # Rounding artifacts.
     day = start
     while day <= end:
-        if rng.random() < 0.01:
+        if rng.random() < 0.01 and not _in_gap(day, gap_windows):
             out.append(
                 RawTx(
                     d=day,
@@ -571,18 +613,26 @@ def inject_noise(
     return out
 
 
-def apply_gaps(rng: random.Random, txs: list[RawTx], start: date, end: date, n_gaps: int) -> list[RawTx]:
+def compute_gap_windows(
+    rng: random.Random, start: date, end: date, n_gaps: int
+) -> list[tuple[date, date]]:
+    """Pick the date ranges where the AA data pull is simulated to have failed."""
     total_days = (end - start).days + 1
     if total_days < 20 or n_gaps <= 0:
-        return txs
-    gap_windows = []
+        return []
+    windows = []
     for _ in range(n_gaps):
         gap_len = rng.randint(2, 7)
         gap_start_offset = rng.randint(0, max(1, total_days - gap_len - 1))
         gap_start = start + timedelta(days=gap_start_offset)
-        gap_end = gap_start + timedelta(days=gap_len)
-        gap_windows.append((gap_start, gap_end))
-    return [t for t in txs if not any(gs <= t.d <= ge for gs, ge in gap_windows)]
+        windows.append((gap_start, gap_start + timedelta(days=gap_len)))
+    return windows
+
+
+def apply_gaps(txs: list[RawTx], gap_windows: list[tuple[date, date]]) -> list[RawTx]:
+    if not gap_windows:
+        return txs
+    return [t for t in txs if not _in_gap(t.d, gap_windows)]
 
 
 def tag_shadow_p2m(txs: list[RawTx]) -> None:
@@ -635,10 +685,14 @@ def build_profile(
     raw = income + expenses
 
     n_gaps = 0 if short_history else rng.choice([0, 0, 1, 1, 2])
-    raw = inject_noise(rng, raw, start, end)
-    # Gaps are applied last so noise transactions never resurrect a day that
-    # was just emptied out to simulate a failed AA data pull.
-    raw = apply_gaps(rng, raw, start, end, n_gaps)
+    # Gap windows are decided first and then honoured by both steps: the base
+    # transactions inside them are dropped, and noise injection skips those
+    # days entirely. Emptying the gaps only after injecting noise would let
+    # settlement sweeps and rounding artifacts resurrect a day the AA pull is
+    # meant to have missed, and could separate a reversal from its original.
+    gap_windows = compute_gap_windows(rng, start, end, n_gaps)
+    raw = apply_gaps(raw, gap_windows)
+    raw = inject_noise(rng, raw, start, end, gap_windows, split_date)
     tag_shadow_p2m(raw)
     raw.sort(key=lambda t: t.d)
 

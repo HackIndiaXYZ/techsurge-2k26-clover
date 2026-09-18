@@ -916,16 +916,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2024-03-10",
-      "direction": "out",
-      "amount": 147.13,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2024-03-11",
       "direction": "in",
       "amount": 189.48,
@@ -1266,16 +1256,6 @@
       "likely_shadow_supplier": true
     },
     {
-      "date": "2024-03-14",
-      "direction": "in",
-      "amount": 578.32,
-      "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2024-03-15",
       "direction": "in",
       "amount": 429.86,
@@ -1533,6 +1513,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-03-18",
+      "direction": "out",
+      "amount": 182.72,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -2166,6 +2156,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2024-03-26",
+      "direction": "in",
+      "amount": 4.78,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "rounding_adjustment",
+      "note": "rounding",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2024-03-27",
       "direction": "in",
       "amount": 231.95,
@@ -2273,16 +2273,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/772979/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-03-27",
-      "direction": "out",
-      "amount": 33.4,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -3476,6 +3466,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2024-04-13",
+      "direction": "out",
+      "amount": 175.5,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2024-04-14",
       "direction": "in",
       "amount": 415.71,
@@ -3533,16 +3533,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/584258/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-04-14",
-      "direction": "out",
-      "amount": 175.5,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -4233,6 +4223,16 @@
       "counterparty_type": "customer",
       "category": "sales",
       "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-04-23",
+      "direction": "in",
+      "amount": 1.75,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "rounding_adjustment",
+      "note": "rounding",
       "likely_shadow_supplier": null
     },
     {
@@ -4933,6 +4933,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/597959/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-05-01",
+      "direction": "out",
+      "amount": 34.5,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -7316,6 +7326,26 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2024-05-31",
+      "direction": "out",
+      "amount": 147.81,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-05-31",
+      "direction": "out",
+      "amount": 16.13,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2024-06-01",
       "direction": "in",
       "amount": 89.59,
@@ -7413,16 +7443,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "CHQ#3194",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-01",
-      "direction": "out",
-      "amount": 147.81,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -8076,16 +8096,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2024-06-08",
-      "direction": "out",
-      "amount": 23.75,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2024-06-09",
       "direction": "in",
       "amount": 147.69,
@@ -8273,6 +8283,16 @@
       "counterparty_type": "customer",
       "category": "sales",
       "note": "CARD-POS-8916",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-06-10",
+      "direction": "in",
+      "amount": 424.83,
+      "channel": "upi",
+      "counterparty_type": "supplier",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -9096,6 +9116,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2024-06-21",
+      "direction": "out",
+      "amount": 50.0,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2024-06-22",
       "direction": "in",
       "amount": 189.53,
@@ -9246,233 +9276,13 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2024-06-24",
-      "direction": "in",
-      "amount": 111.01,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF2025",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-24",
-      "direction": "in",
-      "amount": 40.25,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/938338/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-24",
-      "direction": "in",
-      "amount": 142.96,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF4063",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-24",
-      "direction": "in",
-      "amount": 69.77,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/306647/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-24",
-      "direction": "in",
-      "amount": 139.12,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/375097/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-24",
-      "direction": "in",
-      "amount": 103.4,
-      "channel": "cash",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": null,
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-24",
-      "direction": "in",
-      "amount": 158.88,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/770153/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-24",
-      "direction": "in",
-      "amount": 71.26,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/507517/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-24",
-      "direction": "in",
-      "amount": 167.24,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/715519/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-24",
+      "date": "2024-06-23",
       "direction": "out",
-      "amount": 473.24,
+      "amount": 55.81,
       "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "raw_material",
-      "note": "UPI/849119/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-25",
-      "direction": "in",
-      "amount": 305.39,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/223586/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-25",
-      "direction": "in",
-      "amount": 272.93,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/222629/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-25",
-      "direction": "in",
-      "amount": 149.86,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/827120/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-25",
-      "direction": "in",
-      "amount": 245.36,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/507333/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-25",
-      "direction": "in",
-      "amount": 85.78,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/244564/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-26",
-      "direction": "in",
-      "amount": 72.54,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/429861/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-26",
-      "direction": "in",
-      "amount": 157.11,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF1878",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-26",
-      "direction": "in",
-      "amount": 168.01,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF1157",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-26",
-      "direction": "in",
-      "amount": 158.95,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/304607/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-26",
-      "direction": "in",
-      "amount": 225.64,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF9281",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-26",
-      "direction": "in",
-      "amount": 141.96,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/529008/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-26",
-      "direction": "in",
-      "amount": 129.69,
-      "channel": "cash",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": null,
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-26",
-      "direction": "out",
-      "amount": 710.87,
-      "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "raw_material",
-      "note": "UPI/862160/raw_material",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -9696,6 +9506,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2024-06-29",
+      "direction": "in",
+      "amount": 0.85,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "rounding_adjustment",
+      "note": "rounding",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2024-06-30",
       "direction": "in",
       "amount": 229.83,
@@ -9793,16 +9613,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": null,
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-06-30",
-      "direction": "out",
-      "amount": 200.23,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -9913,6 +9723,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/105063/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-07-01",
+      "direction": "out",
+      "amount": 75.32,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -10516,6 +10336,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2024-07-08",
+      "direction": "in",
+      "amount": 621.76,
+      "channel": "upi",
+      "counterparty_type": "utility",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2024-07-09",
       "direction": "in",
       "amount": 151.84,
@@ -11073,6 +10903,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/733475/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-07-15",
+      "direction": "out",
+      "amount": 5.47,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -12266,16 +12106,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2024-07-30",
-      "direction": "out",
-      "amount": 144.15,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2024-07-31",
       "direction": "in",
       "amount": 99.93,
@@ -12634,6 +12464,436 @@
       "category": "raw_material",
       "note": "CARD-POS-4641",
       "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-03",
+      "direction": "out",
+      "amount": 92.73,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-04",
+      "direction": "in",
+      "amount": 245.84,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/902658/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-04",
+      "direction": "in",
+      "amount": 310.44,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/159532/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-04",
+      "direction": "in",
+      "amount": 134.87,
+      "channel": "neft",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "NEFT-REF7620",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-04",
+      "direction": "in",
+      "amount": 266.46,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-04",
+      "direction": "in",
+      "amount": 319.47,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-04",
+      "direction": "in",
+      "amount": 145.87,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-04",
+      "direction": "out",
+      "amount": 547.41,
+      "channel": "upi",
+      "counterparty_type": "supplier",
+      "category": "raw_material",
+      "note": "UPI/191425/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-05",
+      "direction": "in",
+      "amount": 125.62,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/861842/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-05",
+      "direction": "in",
+      "amount": 169.13,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-05",
+      "direction": "in",
+      "amount": 160.85,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-05",
+      "direction": "in",
+      "amount": 64.34,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/598844/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-05",
+      "direction": "in",
+      "amount": 248.28,
+      "channel": "card",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "CARD-POS-6873",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-05",
+      "direction": "in",
+      "amount": 211.09,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/986486/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-05",
+      "direction": "out",
+      "amount": 425.93,
+      "channel": "cash",
+      "counterparty_type": "supplier",
+      "category": "raw_material",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-06",
+      "direction": "in",
+      "amount": 94.29,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-06",
+      "direction": "in",
+      "amount": 103.9,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/193637/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-06",
+      "direction": "in",
+      "amount": 145.31,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/334176/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-06",
+      "direction": "in",
+      "amount": 319.47,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-06",
+      "direction": "in",
+      "amount": 305.08,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/926372/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-06",
+      "direction": "in",
+      "amount": 121.37,
+      "channel": "neft",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "NEFT-REF7089",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-07",
+      "direction": "in",
+      "amount": 203.55,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/303993/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-07",
+      "direction": "in",
+      "amount": 97.45,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/813763/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-07",
+      "direction": "in",
+      "amount": 77.79,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/412848/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-07",
+      "direction": "in",
+      "amount": 255.88,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/995735/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-07",
+      "direction": "in",
+      "amount": 239.3,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/310026/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-07",
+      "direction": "in",
+      "amount": 251.67,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/697062/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-07",
+      "direction": "out",
+      "amount": 1902.82,
+      "channel": "upi",
+      "counterparty_type": "rent",
+      "category": "rent",
+      "note": "UPI/838482/rent",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-07",
+      "direction": "out",
+      "amount": 595.51,
+      "channel": "cash",
+      "counterparty_type": "utility",
+      "category": "electricity_bill",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-07",
+      "direction": "out",
+      "amount": 506.07,
+      "channel": "upi",
+      "counterparty_type": "supplier",
+      "category": "raw_material",
+      "note": "UPI/819971/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "in",
+      "amount": 164.18,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "in",
+      "amount": 175.53,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/900660/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "in",
+      "amount": 123.28,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "in",
+      "amount": 149.01,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/554779/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "in",
+      "amount": 67.57,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/522988/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "in",
+      "amount": 149.63,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/600590/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "in",
+      "amount": 36.71,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/139557/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "in",
+      "amount": 84.9,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/866151/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "in",
+      "amount": 172.34,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/114760/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "in",
+      "amount": 66.09,
+      "channel": "neft",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "NEFT-REF9700",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "out",
+      "amount": 417.4,
+      "channel": "upi",
+      "counterparty_type": "supplier",
+      "category": "raw_material",
+      "note": "UPI/762224/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "out",
+      "amount": 448.44,
+      "channel": "upi",
+      "counterparty_type": "personal",
+      "category": "personal_transfer",
+      "note": "UPI/839477/personal_transfer",
+      "likely_shadow_supplier": false
+    },
+    {
+      "date": "2024-08-08",
+      "direction": "out",
+      "amount": 665.14,
+      "channel": "upi",
+      "counterparty_type": "personal",
+      "category": "personal_transfer",
+      "note": "UPI/538290/personal_transfer",
+      "likely_shadow_supplier": true
     },
     {
       "date": "2024-08-09",
@@ -13726,6 +13986,16 @@
       "likely_shadow_supplier": false
     },
     {
+      "date": "2024-08-23",
+      "direction": "out",
+      "amount": 13.38,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2024-08-24",
       "direction": "in",
       "amount": 129.98,
@@ -14553,16 +14823,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "CARD-POS-7556",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-03",
-      "direction": "out",
-      "amount": 25.17,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -15936,16 +16196,6 @@
       "likely_shadow_supplier": true
     },
     {
-      "date": "2024-09-19",
-      "direction": "out",
-      "amount": 95.87,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2024-09-20",
       "direction": "in",
       "amount": 96.7,
@@ -16046,16 +16296,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2024-09-20",
-      "direction": "in",
-      "amount": 43.13,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2024-09-21",
       "direction": "in",
       "amount": 208.37,
@@ -16144,506 +16384,6 @@
       "category": "raw_material",
       "note": "UPI/229734/raw_material",
       "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-22",
-      "direction": "in",
-      "amount": 126.39,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF3893",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-22",
-      "direction": "in",
-      "amount": 88.44,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/241003/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-22",
-      "direction": "in",
-      "amount": 138.59,
-      "channel": "cheque",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "CHQ#9470",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-22",
-      "direction": "in",
-      "amount": 128.53,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/431064/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-22",
-      "direction": "in",
-      "amount": 186.45,
-      "channel": "cash",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": null,
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-22",
-      "direction": "in",
-      "amount": 171.31,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/689444/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-22",
-      "direction": "in",
-      "amount": 101.99,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF1781",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-22",
-      "direction": "in",
-      "amount": 341.85,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/824087/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-22",
-      "direction": "in",
-      "amount": 103.09,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/325933/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-22",
-      "direction": "out",
-      "amount": 642.67,
-      "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "raw_material",
-      "note": "UPI/305064/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-23",
-      "direction": "in",
-      "amount": 210.26,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/812597/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-23",
-      "direction": "in",
-      "amount": 102.34,
-      "channel": "cheque",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "CHQ#4259",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-23",
-      "direction": "in",
-      "amount": 124.72,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/781433/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-23",
-      "direction": "in",
-      "amount": 168.61,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/283017/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-23",
-      "direction": "in",
-      "amount": 224.82,
-      "channel": "cheque",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "CHQ#5663",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-23",
-      "direction": "in",
-      "amount": 121.12,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/805893/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-23",
-      "direction": "in",
-      "amount": 136.17,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/912378/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-23",
-      "direction": "out",
-      "amount": 426.97,
-      "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "raw_material",
-      "note": "UPI/361176/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-24",
-      "direction": "in",
-      "amount": 257.17,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/946952/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-24",
-      "direction": "in",
-      "amount": 215.32,
-      "channel": "card",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "CARD-POS-7911",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-24",
-      "direction": "in",
-      "amount": 368.1,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/699405/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-24",
-      "direction": "in",
-      "amount": 152.62,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/174809/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-24",
-      "direction": "out",
-      "amount": 628.43,
-      "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "raw_material",
-      "note": "UPI/336293/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-25",
-      "direction": "in",
-      "amount": 84.02,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/292818/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-25",
-      "direction": "in",
-      "amount": 79.93,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF3048",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-25",
-      "direction": "in",
-      "amount": 144.43,
-      "channel": "cash",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": null,
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-25",
-      "direction": "in",
-      "amount": 80.58,
-      "channel": "cash",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": null,
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-25",
-      "direction": "in",
-      "amount": 110.27,
-      "channel": "card",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "CARD-POS-2311",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-25",
-      "direction": "in",
-      "amount": 181.73,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/516332/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-25",
-      "direction": "in",
-      "amount": 96.3,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/166891/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-25",
-      "direction": "in",
-      "amount": 134.56,
-      "channel": "card",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "CARD-POS-8752",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-25",
-      "direction": "in",
-      "amount": 199.3,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/127645/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-25",
-      "direction": "out",
-      "amount": 600.38,
-      "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "raw_material",
-      "note": "UPI/627108/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-26",
-      "direction": "in",
-      "amount": 211.48,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/756912/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-26",
-      "direction": "in",
-      "amount": 62.07,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/652329/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-26",
-      "direction": "in",
-      "amount": 101.35,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF1468",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-26",
-      "direction": "in",
-      "amount": 77.86,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/474175/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-26",
-      "direction": "in",
-      "amount": 187.34,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF6328",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-26",
-      "direction": "in",
-      "amount": 237.88,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF8654",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-26",
-      "direction": "in",
-      "amount": 111.63,
-      "channel": "cheque",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "CHQ#9856",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-26",
-      "direction": "in",
-      "amount": 98.05,
-      "channel": "card",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "CARD-POS-9987",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-26",
-      "direction": "out",
-      "amount": 647.38,
-      "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "raw_material",
-      "note": "UPI/390694/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-26",
-      "direction": "out",
-      "amount": 669.86,
-      "channel": "upi",
-      "counterparty_type": "personal",
-      "category": "personal_transfer",
-      "note": "UPI/457052/personal_transfer",
-      "likely_shadow_supplier": true
-    },
-    {
-      "date": "2024-09-27",
-      "direction": "in",
-      "amount": 173.58,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/659713/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-27",
-      "direction": "in",
-      "amount": 144.1,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/464032/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-27",
-      "direction": "in",
-      "amount": 208.27,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/338161/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-27",
-      "direction": "in",
-      "amount": 236.45,
-      "channel": "neft",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "NEFT-REF8239",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-27",
-      "direction": "in",
-      "amount": 139.37,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "sales",
-      "note": "UPI/532227/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-27",
-      "direction": "out",
-      "amount": 543.2,
-      "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "raw_material",
-      "note": "UPI/524832/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-09-27",
-      "direction": "in",
-      "amount": 1856.18,
-      "channel": "upi",
-      "counterparty_type": "personal",
-      "category": "personal_transfer",
-      "note": "UPI/231465/personal_transfer",
-      "likely_shadow_supplier": false
     },
     {
       "date": "2024-09-28",
@@ -17926,16 +17666,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2024-10-15",
-      "direction": "out",
-      "amount": 282.27,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2024-10-16",
       "direction": "in",
       "amount": 699.37,
@@ -18586,6 +18316,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2024-10-23",
+      "direction": "out",
+      "amount": 535.0,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2024-10-24",
       "direction": "in",
       "amount": 424.28,
@@ -19043,6 +18783,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/307581/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-10-28",
+      "direction": "in",
+      "amount": 56.83,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -19636,16 +19386,6 @@
       "likely_shadow_supplier": false
     },
     {
-      "date": "2024-11-04",
-      "direction": "out",
-      "amount": 459.65,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2024-11-05",
       "direction": "in",
       "amount": 573.39,
@@ -19843,16 +19583,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": null,
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-11-06",
-      "direction": "in",
-      "amount": 3.97,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "rounding_adjustment",
-      "note": "rounding",
       "likely_shadow_supplier": null
     },
     {
@@ -20333,6 +20063,16 @@
       "counterparty_type": "customer",
       "category": "sales",
       "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-11-12",
+      "direction": "out",
+      "amount": 270.78,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -21286,6 +21026,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2024-11-23",
+      "direction": "in",
+      "amount": 6.32,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2024-11-24",
       "direction": "in",
       "amount": 500.56,
@@ -21333,26 +21083,6 @@
       "counterparty_type": "customer",
       "category": "sales",
       "note": "UPI/748410/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-11-24",
-      "direction": "out",
-      "amount": 431.08,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-11-24",
-      "direction": "out",
-      "amount": 42.91,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -21553,16 +21283,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/744312/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-11-27",
-      "direction": "in",
-      "amount": 7.73,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -22053,6 +21773,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/880622/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2024-12-04",
+      "direction": "out",
+      "amount": 245.17,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -23566,16 +23296,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2024-12-21",
-      "direction": "out",
-      "amount": 292.94,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2024-12-22",
       "direction": "in",
       "amount": 99.02,
@@ -23673,16 +23393,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": null,
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-12-22",
-      "direction": "out",
-      "amount": 8.13,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -24136,6 +23846,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2024-12-28",
+      "direction": "out",
+      "amount": 822.51,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2024-12-29",
       "direction": "in",
       "amount": 912.36,
@@ -24253,16 +23973,6 @@
       "counterparty_type": "customer",
       "category": "sales",
       "note": "UPI/656860/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2024-12-30",
-      "direction": "out",
-      "amount": 51.95,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -25586,6 +25296,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-01-16",
+      "direction": "in",
+      "amount": 4.11,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "rounding_adjustment",
+      "note": "rounding",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-01-17",
       "direction": "in",
       "amount": 200.68,
@@ -25666,6 +25386,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-01-17",
+      "direction": "out",
+      "amount": 9.53,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-01-18",
       "direction": "in",
       "amount": 301.88,
@@ -25743,16 +25473,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/208304/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2025-01-18",
-      "direction": "in",
-      "amount": 3.2,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "rounding_adjustment",
-      "note": "rounding",
       "likely_shadow_supplier": null
     },
     {
@@ -27108,12 +26828,12 @@
     {
       "date": "2025-02-06",
       "direction": "in",
-      "amount": 44.48,
+      "amount": 692.14,
       "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
+      "counterparty_type": "personal",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": true
     },
     {
       "date": "2025-02-07",
@@ -27443,6 +27163,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/877448/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-02-10",
+      "direction": "out",
+      "amount": 32.35,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -28396,16 +28126,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-02-21",
-      "direction": "out",
-      "amount": 307.05,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-02-22",
       "direction": "in",
       "amount": 178.31,
@@ -28806,16 +28526,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-02-25",
-      "direction": "out",
-      "amount": 400.51,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-02-26",
       "direction": "in",
       "amount": 305.99,
@@ -28923,26 +28633,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/146761/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2025-02-26",
-      "direction": "out",
-      "amount": 104.73,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2025-02-26",
-      "direction": "in",
-      "amount": 738.93,
-      "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "upi_reversal",
-      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -29206,16 +28896,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-03-01",
-      "direction": "out",
-      "amount": 465.05,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-03-02",
       "direction": "in",
       "amount": 357.66,
@@ -29456,16 +29136,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-03-04",
-      "direction": "out",
-      "amount": 27.3,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-03-05",
       "direction": "in",
       "amount": 154.44,
@@ -29523,6 +29193,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "CHQ#5008",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-03-05",
+      "direction": "out",
+      "amount": 85.55,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -29693,6 +29373,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/864816/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-03-07",
+      "direction": "out",
+      "amount": 312.95,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -30036,6 +29726,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-03-12",
+      "direction": "out",
+      "amount": 410.03,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-03-13",
       "direction": "in",
       "amount": 202.09,
@@ -30218,11 +29918,11 @@
     {
       "date": "2025-03-14",
       "direction": "out",
-      "amount": 208.81,
+      "amount": 26.81,
       "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -30724,6 +30424,16 @@
       "category": "personal_transfer",
       "note": "UPI/238459/personal_transfer",
       "likely_shadow_supplier": true
+    },
+    {
+      "date": "2025-03-20",
+      "direction": "out",
+      "amount": 498.27,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
     },
     {
       "date": "2025-03-21",
@@ -31243,16 +30953,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/857645/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2025-03-26",
-      "direction": "in",
-      "amount": 2.41,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "rounding_adjustment",
-      "note": "rounding",
       "likely_shadow_supplier": null
     },
     {
@@ -31803,16 +31503,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/877861/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2025-04-01",
-      "direction": "out",
-      "amount": 15.71,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -32646,16 +32336,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-04-12",
-      "direction": "in",
-      "amount": 37.11,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-04-13",
       "direction": "in",
       "amount": 610.67,
@@ -33106,16 +32786,6 @@
       "likely_shadow_supplier": true
     },
     {
-      "date": "2025-04-17",
-      "direction": "in",
-      "amount": 455.94,
-      "channel": "upi",
-      "counterparty_type": "supplier",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-04-18",
       "direction": "in",
       "amount": 277.66,
@@ -33366,6 +33036,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-04-20",
+      "direction": "out",
+      "amount": 55.17,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-04-21",
       "direction": "in",
       "amount": 247.14,
@@ -33613,6 +33293,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/912476/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-04-23",
+      "direction": "in",
+      "amount": 8.98,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -33906,6 +33596,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-04-27",
+      "direction": "in",
+      "amount": 3.06,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "rounding_adjustment",
+      "note": "rounding",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-04-28",
       "direction": "in",
       "amount": 331.37,
@@ -34173,6 +33873,246 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/864764/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-01",
+      "direction": "in",
+      "amount": 305.46,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/670019/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-01",
+      "direction": "in",
+      "amount": 347.71,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/964996/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-01",
+      "direction": "in",
+      "amount": 323.22,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/671098/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-01",
+      "direction": "in",
+      "amount": 161.5,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/636391/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-01",
+      "direction": "in",
+      "amount": 216.1,
+      "channel": "neft",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "NEFT-REF7804",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-01",
+      "direction": "in",
+      "amount": 141.26,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/335208/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-01",
+      "direction": "in",
+      "amount": 236.66,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/547883/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-01",
+      "direction": "out",
+      "amount": 803.83,
+      "channel": "upi",
+      "counterparty_type": "supplier",
+      "category": "raw_material",
+      "note": "UPI/893701/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-01",
+      "direction": "out",
+      "amount": 694.39,
+      "channel": "upi",
+      "counterparty_type": "personal",
+      "category": "personal_transfer",
+      "note": "UPI/262856/personal_transfer",
+      "likely_shadow_supplier": true
+    },
+    {
+      "date": "2025-05-02",
+      "direction": "in",
+      "amount": 333.2,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/277795/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-02",
+      "direction": "in",
+      "amount": 165.9,
+      "channel": "cheque",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "CHQ#4678",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-02",
+      "direction": "in",
+      "amount": 420.32,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/395503/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-02",
+      "direction": "in",
+      "amount": 227.78,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/745604/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-02",
+      "direction": "in",
+      "amount": 422.35,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/478004/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-02",
+      "direction": "in",
+      "amount": 398.42,
+      "channel": "card",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "CARD-POS-2389",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-03",
+      "direction": "in",
+      "amount": 245.88,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/623502/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-03",
+      "direction": "in",
+      "amount": 175.32,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-03",
+      "direction": "in",
+      "amount": 287.44,
+      "channel": "card",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "CARD-POS-2251",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-03",
+      "direction": "in",
+      "amount": 502.53,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-03",
+      "direction": "in",
+      "amount": 407.85,
+      "channel": "neft",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "NEFT-REF3435",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-03",
+      "direction": "in",
+      "amount": 379.16,
+      "channel": "cash",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-03",
+      "direction": "in",
+      "amount": 223.89,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/254958/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-03",
+      "direction": "in",
+      "amount": 494.39,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "sales",
+      "note": "UPI/856383/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-05-03",
+      "direction": "out",
+      "amount": 512.33,
+      "channel": "upi",
+      "counterparty_type": "supplier",
+      "category": "raw_material",
+      "note": "UPI/717592/raw_material",
       "likely_shadow_supplier": null
     },
     {
@@ -35286,6 +35226,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-05-19",
+      "direction": "out",
+      "amount": 19.4,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-05-20",
       "direction": "in",
       "amount": 275.87,
@@ -35736,16 +35686,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-05-24",
-      "direction": "in",
-      "amount": 3.93,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "rounding_adjustment",
-      "note": "rounding",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-05-25",
       "direction": "in",
       "amount": 393.08,
@@ -36053,16 +35993,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/530300/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2025-05-27",
-      "direction": "out",
-      "amount": 261.27,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -36396,6 +36326,26 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-06-01",
+      "direction": "in",
+      "amount": 595.37,
+      "channel": "upi",
+      "counterparty_type": "supplier",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-06-01",
+      "direction": "in",
+      "amount": 53.25,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-06-02",
       "direction": "in",
       "amount": 316.25,
@@ -36546,6 +36496,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-06-03",
+      "direction": "out",
+      "amount": 26.53,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-06-04",
       "direction": "in",
       "amount": 71.43,
@@ -36623,6 +36583,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "NEFT-REF5789",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-06-04",
+      "direction": "out",
+      "amount": 221.06,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -36957,8 +36927,8 @@
     },
     {
       "date": "2025-06-08",
-      "direction": "in",
-      "amount": 15.79,
+      "direction": "out",
+      "amount": 38.04,
       "channel": "upi",
       "counterparty_type": "unknown",
       "category": "batch_settlement",
@@ -37616,6 +37586,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-06-16",
+      "direction": "in",
+      "amount": 7.3,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-06-17",
       "direction": "in",
       "amount": 223.69,
@@ -38087,12 +38067,12 @@
     },
     {
       "date": "2025-06-22",
-      "direction": "out",
-      "amount": 376.69,
+      "direction": "in",
+      "amount": 2.02,
       "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
+      "counterparty_type": "unknown",
+      "category": "rounding_adjustment",
+      "note": "rounding",
       "likely_shadow_supplier": null
     },
     {
@@ -38726,6 +38706,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-06-29",
+      "direction": "out",
+      "amount": 137.7,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-06-30",
       "direction": "in",
       "amount": 168.15,
@@ -38956,16 +38946,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-07-02",
-      "direction": "out",
-      "amount": 40.14,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-07-03",
       "direction": "in",
       "amount": 185.22,
@@ -39047,8 +39027,8 @@
     },
     {
       "date": "2025-07-03",
-      "direction": "in",
-      "amount": 19.39,
+      "direction": "out",
+      "amount": 32.21,
       "channel": "upi",
       "counterparty_type": "unknown",
       "category": "batch_settlement",
@@ -40556,6 +40536,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2025-07-20",
+      "direction": "in",
+      "amount": 685.16,
+      "channel": "upi",
+      "counterparty_type": "supplier",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2025-07-21",
       "direction": "in",
       "amount": 112.72,
@@ -41626,16 +41616,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-08-02",
-      "direction": "out",
-      "amount": 79.0,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-08-03",
       "direction": "in",
       "amount": 144.49,
@@ -42243,6 +42223,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/194830/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-08-09",
+      "direction": "out",
+      "amount": 109.09,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -43043,6 +43033,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-08-19",
+      "direction": "out",
+      "amount": 30.34,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -44536,16 +44536,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-09-06",
-      "direction": "out",
-      "amount": 38.49,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-09-07",
       "direction": "in",
       "amount": 358.33,
@@ -44663,6 +44653,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/534759/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2025-09-08",
+      "direction": "out",
+      "amount": 21.81,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -45896,16 +45896,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-09-23",
-      "direction": "in",
-      "amount": 1.82,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "rounding_adjustment",
-      "note": "rounding",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-09-24",
       "direction": "in",
       "amount": 119.09,
@@ -46744,16 +46734,6 @@
       "category": "personal_transfer",
       "note": "UPI/954091/personal_transfer",
       "likely_shadow_supplier": true
-    },
-    {
-      "date": "2025-10-02",
-      "direction": "in",
-      "amount": 20.42,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
     },
     {
       "date": "2025-10-03",
@@ -48016,16 +47996,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-10-18",
-      "direction": "out",
-      "amount": 6.57,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-10-19",
       "direction": "in",
       "amount": 445.99,
@@ -48274,6 +48244,16 @@
       "category": "personal_transfer",
       "note": "UPI/385104/personal_transfer",
       "likely_shadow_supplier": false
+    },
+    {
+      "date": "2025-10-21",
+      "direction": "out",
+      "amount": 673.67,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
     },
     {
       "date": "2025-10-22",
@@ -48653,16 +48633,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/281054/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2025-10-26",
-      "direction": "out",
-      "amount": 6.27,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -49734,6 +49704,16 @@
       "category": "personal_transfer",
       "note": "UPI/519909/personal_transfer",
       "likely_shadow_supplier": false
+    },
+    {
+      "date": "2025-11-08",
+      "direction": "out",
+      "amount": 14.18,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
     },
     {
       "date": "2025-11-09",
@@ -53916,16 +53896,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2025-12-30",
-      "direction": "out",
-      "amount": 439.33,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2025-12-31",
       "direction": "in",
       "amount": 366.55,
@@ -54636,6 +54606,26 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2026-01-07",
+      "direction": "out",
+      "amount": 303.31,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2026-01-07",
+      "direction": "out",
+      "amount": 206.39,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2026-01-08",
       "direction": "in",
       "amount": 313.4,
@@ -54883,16 +54873,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "NEFT-REF1875",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2026-01-10",
-      "direction": "out",
-      "amount": 549.74,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -55366,16 +55346,6 @@
       "likely_shadow_supplier": true
     },
     {
-      "date": "2026-01-15",
-      "direction": "in",
-      "amount": 11.52,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2026-01-16",
       "direction": "in",
       "amount": 206.17,
@@ -55476,6 +55446,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2026-01-16",
+      "direction": "out",
+      "amount": 55.76,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2026-01-17",
       "direction": "in",
       "amount": 235.54,
@@ -55533,6 +55513,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "NEFT-REF3379",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2026-01-17",
+      "direction": "out",
+      "amount": 642.3,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -55664,16 +55654,6 @@
       "category": "personal_transfer",
       "note": null,
       "likely_shadow_supplier": false
-    },
-    {
-      "date": "2026-01-19",
-      "direction": "out",
-      "amount": 8.26,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
     },
     {
       "date": "2026-01-20",
@@ -57636,16 +57616,6 @@
       "likely_shadow_supplier": true
     },
     {
-      "date": "2026-02-12",
-      "direction": "out",
-      "amount": 433.13,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2026-02-13",
       "direction": "in",
       "amount": 309.61,
@@ -57723,6 +57693,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/145929/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2026-02-13",
+      "direction": "in",
+      "amount": 3.74,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "rounding_adjustment",
+      "note": "rounding",
       "likely_shadow_supplier": null
     },
     {
@@ -58164,6 +58144,16 @@
       "category": "personal_transfer",
       "note": "UPI/538190/personal_transfer",
       "likely_shadow_supplier": true
+    },
+    {
+      "date": "2026-02-19",
+      "direction": "out",
+      "amount": 315.81,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
     },
     {
       "date": "2026-02-20",
@@ -60148,26 +60138,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2026-03-16",
-      "direction": "out",
-      "amount": 284.08,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2026-03-16",
-      "direction": "in",
-      "amount": 19.23,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2026-03-17",
       "direction": "in",
       "amount": 400.28,
@@ -60426,16 +60396,6 @@
       "category": "personal_transfer",
       "note": "UPI/245209/personal_transfer",
       "likely_shadow_supplier": true
-    },
-    {
-      "date": "2026-03-19",
-      "direction": "in",
-      "amount": 1.31,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "rounding_adjustment",
-      "note": "rounding",
-      "likely_shadow_supplier": null
     },
     {
       "date": "2026-03-20",
@@ -60698,16 +60658,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2026-03-22",
-      "direction": "out",
-      "amount": 247.48,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2026-03-23",
       "direction": "in",
       "amount": 754.21,
@@ -60948,6 +60898,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2026-03-25",
+      "direction": "out",
+      "amount": 329.41,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2026-03-26",
       "direction": "in",
       "amount": 528.88,
@@ -61006,6 +60966,16 @@
       "category": "personal_transfer",
       "note": "UPI/415791/personal_transfer",
       "likely_shadow_supplier": true
+    },
+    {
+      "date": "2026-03-26",
+      "direction": "in",
+      "amount": 37.15,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
     },
     {
       "date": "2026-03-27",
@@ -61805,6 +61775,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": null,
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2026-04-05",
+      "direction": "in",
+      "amount": 1.97,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "rounding_adjustment",
+      "note": "rounding",
       "likely_shadow_supplier": null
     },
     {
@@ -63218,16 +63198,6 @@
       "likely_shadow_supplier": false
     },
     {
-      "date": "2026-04-20",
-      "direction": "in",
-      "amount": 309.24,
-      "channel": "upi",
-      "counterparty_type": "personal",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": false
-    },
-    {
       "date": "2026-04-21",
       "direction": "in",
       "amount": 284.0,
@@ -64128,16 +64098,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2026-05-03",
-      "direction": "in",
-      "amount": 33.26,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2026-05-04",
       "direction": "in",
       "amount": 456.46,
@@ -64305,26 +64265,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "NEFT-REF5874",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2026-05-05",
-      "direction": "out",
-      "amount": 165.67,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2026-05-05",
-      "direction": "out",
-      "amount": 24.04,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -64918,16 +64858,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2026-05-13",
-      "direction": "out",
-      "amount": 5.32,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2026-05-14",
       "direction": "in",
       "amount": 337.88,
@@ -65039,12 +64969,12 @@
     },
     {
       "date": "2026-05-14",
-      "direction": "in",
-      "amount": 2.1,
+      "direction": "out",
+      "amount": 194.54,
       "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "rounding_adjustment",
-      "note": "rounding",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -66106,6 +66036,16 @@
       "category": "personal_transfer",
       "note": "UPI/243592/personal_transfer",
       "likely_shadow_supplier": true
+    },
+    {
+      "date": "2026-05-28",
+      "direction": "out",
+      "amount": 48.38,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
     },
     {
       "date": "2026-05-29",
@@ -67948,6 +67888,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2026-06-21",
+      "direction": "in",
+      "amount": 41.16,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2026-06-22",
       "direction": "in",
       "amount": 49.29,
@@ -69045,6 +68995,16 @@
       "counterparty_type": "customer",
       "category": "sales",
       "note": "UPI/209619/sales",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2026-07-05",
+      "direction": "out",
+      "amount": 42.22,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -70318,16 +70278,6 @@
       "likely_shadow_supplier": null
     },
     {
-      "date": "2026-07-21",
-      "direction": "out",
-      "amount": 37.59,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2026-07-22",
       "direction": "in",
       "amount": 244.39,
@@ -70638,6 +70588,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2026-07-25",
+      "direction": "in",
+      "amount": 18.28,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2026-07-26",
       "direction": "in",
       "amount": 116.13,
@@ -70735,16 +70695,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/453141/raw_material",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2026-07-26",
-      "direction": "in",
-      "amount": 19.13,
-      "channel": "upi",
-      "counterparty_type": "unknown",
-      "category": "batch_settlement",
-      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -70905,6 +70855,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "UPI/746962/raw_material",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2026-07-28",
+      "direction": "out",
+      "amount": 34.32,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
       "likely_shadow_supplier": null
     },
     {
@@ -71218,6 +71178,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2026-08-01",
+      "direction": "in",
+      "amount": 47.06,
+      "channel": "upi",
+      "counterparty_type": "unknown",
+      "category": "batch_settlement",
+      "note": "UPI SETTLEMENT BATCH",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2026-08-02",
       "direction": "in",
       "amount": 529.43,
@@ -71495,16 +71465,6 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "NEFT-REF5379",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2026-08-05",
-      "direction": "out",
-      "amount": 190.44,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -72178,16 +72138,6 @@
       "likely_shadow_supplier": true
     },
     {
-      "date": "2026-08-13",
-      "direction": "out",
-      "amount": 48.18,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
-      "likely_shadow_supplier": null
-    },
-    {
       "date": "2026-08-14",
       "direction": "in",
       "amount": 182.68,
@@ -72275,6 +72225,16 @@
       "counterparty_type": "supplier",
       "category": "raw_material",
       "note": "CARD-POS-4437",
+      "likely_shadow_supplier": null
+    },
+    {
+      "date": "2026-08-14",
+      "direction": "out",
+      "amount": 48.18,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
@@ -72898,6 +72858,16 @@
       "likely_shadow_supplier": null
     },
     {
+      "date": "2026-08-23",
+      "direction": "out",
+      "amount": 425.55,
+      "channel": "upi",
+      "counterparty_type": "customer",
+      "category": "upi_reversal",
+      "note": "REVERSED",
+      "likely_shadow_supplier": null
+    },
+    {
       "date": "2026-08-24",
       "direction": "in",
       "amount": 325.67,
@@ -73035,16 +73005,6 @@
       "counterparty_type": "customer",
       "category": "sales",
       "note": "UPI/969164/sales",
-      "likely_shadow_supplier": null
-    },
-    {
-      "date": "2026-08-26",
-      "direction": "out",
-      "amount": 223.37,
-      "channel": "upi",
-      "counterparty_type": "customer",
-      "category": "upi_reversal",
-      "note": "REVERSED",
       "likely_shadow_supplier": null
     },
     {
