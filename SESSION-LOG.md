@@ -1,4 +1,4 @@
-# Clover Frontend — SESSION-LOG.md
+# Credify Frontend — SESSION-LOG.md
 # Updated: 2026-09-18
 
 ## Agent: Antigravity (Google DeepMind Antigravity IDE)
@@ -10,7 +10,7 @@
 
 ## What was built
 
-A Flutter frontend skeleton for the Clover alternative-credit scoring app
+A Flutter frontend skeleton for the Credify alternative-credit scoring app
 (TechSurge 2k26, PS-F02 "Credit Invisible") under `/frontend/`.
 
 ### Architecture
@@ -18,17 +18,17 @@ A Flutter frontend skeleton for the Clover alternative-credit scoring app
 ```
 frontend/lib/
 ├── main.dart                        # App shell, theme, nav, disclaimer banner
-├── mock_backend.dart                # Mock API (implements CloverApiService)
+├── mock_backend.dart                # Mock API (implements CredifyApiService)
 ├── models/
 │   ├── analyze_response.dart        # POST /api/analyze contract model
 │   └── portfolio_response.dart      # GET /api/portfolio contract model
 ├── services/
-│   ├── clover_api_service.dart      # Abstract interface (swap-ready)
-│   └── clover_http_service.dart     # Real HTTP implementation (not activated)
+│   ├── credify_api_service.dart      # Abstract interface (swap-ready)
+│   └── credify_http_service.dart     # Real HTTP implementation (not activated)
 ├── state/
 │   └── app_state.dart               # ChangeNotifier state for lender flow + consent
 ├── screens/
-│   ├── lender_screen.dart           # Screen 1: bureau dead-end → Clover score
+│   ├── lender_screen.dart           # Screen 1: bureau dead-end → Credify score
 │   ├── consent_screen.dart          # Screen 2: AA consent flow
 │   ├── portfolio_screen.dart        # Screen 3: portfolio metrics + histogram
 │   └── borrower_screen.dart         # Screen 4: plain-language borrower view
@@ -70,13 +70,13 @@ frontend/lib/
   - Strengths: `ontime_bill_payment_rate` (+0.729), `months_would_cover_emi_of_last_24` (+0.549), `trend_last_6_months` (+0.514).
   - Concerns: empty list (strong candidate, 0 concerns).
   - Affordability: `indicative_emi_low: 8989.59`, `indicative_emi_high: 13606.68`, `months_would_cover_emi_of_last_24: 24`.
-- In `frontend/lib/services/clover_http_service.dart`: added TODO comment above `getAvailableProfileIds()` noting pending confirmation with backend on exact demo profile IDs in `/data`. Left IDs and `analyzeProfile()` untouched.
-- In `frontend/test/clover_test.dart`: updated test assertion from 71.5 to 91.0.
+- In `frontend/lib/services/credify_http_service.dart`: added TODO comment above `getAvailableProfileIds()` noting pending confirmation with backend on exact demo profile IDs in `/data`. Left IDs and `analyzeProfile()` untouched.
+- In `frontend/test/credify_test.dart`: updated test assertion from 71.5 to 91.0.
 - Verification: `flutter analyze` passed (0 issues), `flutter test` passed (15/15 tests).
 
 ### Rejected alternatives
-- Did NOT modify `analyzeProfile()` request body or URL in `clover_http_service.dart` — waiting for backend's `GET /api/profiles/{profile_id}` endpoint to be shipped and confirmed.
-- Did NOT alter demo profile IDs in `clover_http_service.dart` pending backend confirmation.
+- Did NOT modify `analyzeProfile()` request body or URL in `credify_http_service.dart` — waiting for backend's `GET /api/profiles/{profile_id}` endpoint to be shipped and confirmed.
+- Did NOT alter demo profile IDs in `credify_http_service.dart` pending backend confirmation.
 
 
 ---
@@ -86,20 +86,20 @@ frontend/lib/
 ### Branch: integration/e2e-wireup (off main 3695262, merges praneeth/frontend 24dfd27)
 
 ### Completed
-- `clover_http_service.dart`: `analyzeProfile()` now calls `GET /api/profiles/{id}`
+- `credify_http_service.dart`: `analyzeProfile()` now calls `GET /api/profiles/{id}`
   (`Accept: application/json`) instead of `POST /api/analyze` with only a
   `profile_id` body, which 422'd. Removed the "pending confirmation" TODO; the 4
   ids are final and backed by files in `/data`.
 - `main.dart`: live backend is now the default. `_useMock` reads
-  `--dart-define=CLOVER_USE_MOCK=true`; `CLOVER_API_URL` still overrides the
+  `--dart-define=CREDIFY_USE_MOCK=true`; `CREDIFY_API_URL` still overrides the
   `http://localhost:8000` default. (This supersedes Session 1's
   "`_useMock = true`" and "HTTP implementation (not activated)" notes.)
 - `portfolio_screen.dart`: the "ILLUSTRATIVE PLACEHOLDER" subtitle is shown only
   with MockBackend; live data is labelled as live.
-- `clover_test.dart`: 2 `MockClient` tests pin the call site (GET, URL, Accept
+- `credify_test.dart`: 2 `MockClient` tests pin the call site (GET, URL, Accept
   header, non-2xx throws). Verified the first fails against the old POST code.
 - Verified: backend 211 passed; `flutter analyze` 0 issues; `flutter test` 17/17;
-  all 4 ids clicked through in Chrome (Consent -> Approve -> Bureau -> Clover)
+  all 4 ids clicked through in Chrome (Consent -> Approve -> Bureau -> Credify)
   against a live uvicorn server.
 
 ### Live results (model trained on the committed 521-profile feature table)
@@ -148,7 +148,7 @@ frontend/lib/
 ### Decisions
 - dormancy_gap_003 and ramesh_carpentry_004 stay SCORED (demo narrative decision).
   `MockBackend` still has them as NOT_ASSESSABLE / LOW_CONFIDENCE; this only matters
-  with `--dart-define=CLOVER_USE_MOCK=true`.
+  with `--dart-define=CREDIFY_USE_MOCK=true`.
 
 ### Noticed, not fixed
 - At a 1280x2000 viewport Flutter logs a transient "RenderFlex overflowed by 51 pixels"

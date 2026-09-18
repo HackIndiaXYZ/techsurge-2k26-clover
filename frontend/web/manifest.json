@@ -1,6 +1,6 @@
 {
-    "name": "clover_frontend",
-    "short_name": "clover_frontend",
+    "name": "credify_frontend",
+    "short_name": "credify_frontend",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

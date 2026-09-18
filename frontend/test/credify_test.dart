@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:clover_frontend/models/analyze_response.dart';
-import 'package:clover_frontend/models/portfolio_response.dart';
-import 'package:clover_frontend/mock_backend.dart';
-import 'package:clover_frontend/services/clover_http_service.dart';
+import 'package:credify_frontend/models/analyze_response.dart';
+import 'package:credify_frontend/models/portfolio_response.dart';
+import 'package:credify_frontend/mock_backend.dart';
+import 'package:credify_frontend/services/credify_http_service.dart';
 
 void main() {
   group('AnalyzeResponse model', () {
@@ -262,10 +262,10 @@ void main() {
     });
   });
 
-  group('CloverHttpService', () {
+  group('CredifyHttpService', () {
     test('analyzeProfile GETs /api/profiles/{id} (not POST /api/analyze)', () async {
       late http.Request sent;
-      final service = CloverHttpService(
+      final service = CredifyHttpService(
         client: MockClient((req) async {
           sent = req;
           return http.Response(
@@ -301,7 +301,7 @@ void main() {
     });
 
     test('analyzeProfile throws on a non-2xx response', () async {
-      final service = CloverHttpService(
+      final service = CredifyHttpService(
         client: MockClient((_) async => http.Response('{"detail":"unknown"}', 404)),
       );
       expect(service.analyzeProfile('nope'), throwsException);

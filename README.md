@@ -1,6 +1,6 @@
 # Credify — Credit Invisible (TechSurge 2k26, PS-F02)
 
-Clover is a research prototype for MSME credit scoring using alternative
+Credify is a research prototype for MSME credit scoring using alternative
 data — specifically simulated Account Aggregator (AA) transaction history —
 for small businesses that are "credit invisible" to traditional bureaus.
 This repository currently contains the synthetic data generator, the

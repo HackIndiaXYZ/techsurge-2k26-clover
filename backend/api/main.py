@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Clover Vitality Scoring API",
+    title="Credify Vitality Scoring API",
     description="Research prototype on synthetic data. Not a lending decision system.",
     lifespan=lifespan,
 )
@@ -194,7 +194,7 @@ def get_profile_analysis(
     contract at all.
 
     Why this exists: the frontend skeleton
-    (frontend/lib/services/clover_http_service.dart) posts only
+    (frontend/lib/services/credify_http_service.dart) posts only
     {"profile_id": "..."} to /api/analyze, not Y1's full AnalyzeRequest
     shape ({profile_id, transactions, months_available}). /api/analyze
     implements that contract exactly, with no deviation, for every real

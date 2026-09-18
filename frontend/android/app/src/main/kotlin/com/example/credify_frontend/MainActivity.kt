@@ -1,4 +1,4 @@
-package com.example.clover_frontend
+package com.example.credify_frontend
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -158,7 +158,7 @@ curl -s http://localhost:8000/api/portfolio
 
 **Not part of Y1's original contract, and does not change `/api/analyze`'s
 contract at all.** Added specifically to bridge a request-shape gap: the
-frontend skeleton (`frontend/lib/services/clover_http_service.dart`) POSTs
+frontend skeleton (`frontend/lib/services/credify_http_service.dart`) POSTs
 only `{"profile_id": "..."}` to `/api/analyze`, not the full `AnalyzeRequest`
 shape (`transactions`/`months_available`) Y1's contract requires. Rather than
 relaxing `/api/analyze` for every real integration, this is a separate
@@ -166,7 +166,7 @@ endpoint that looks a known **demo** profile up server-side by id and scores
 it directly. Response shape is `AnalyzeResponse`, same as `/api/analyze`.
 
 The frontend's 4 hardcoded demo ids (`frontend/lib/services/
-clover_http_service.dart::getAvailableProfileIds`) now all resolve:
+credify_http_service.dart::getAvailableProfileIds`) now all resolve:
 
 | Frontend id | Backed by | Story |
 |---|---|---|
@@ -211,7 +211,7 @@ effect.** The frontend skeleton currently calls `POST /api/analyze` with
 `/api/analyze` (that contract is unchanged, deliberately). The frontend
 needs to switch its demo-profile lookup path to `GET /api/profiles/{id}`
 instead — its own code already anticipates this
-(`clover_http_service.dart`'s comment: "When live backend is wired up, can
+(`credify_http_service.dart`'s comment: "When live backend is wired up, can
 fetch from /api/profiles or keep known sample list"). Flagging this so it
 isn't a surprise mid-demo; not making that frontend change here.
 

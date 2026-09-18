@@ -68,20 +68,20 @@ class LenderScreen extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // ── Step 2: Clover alternative-data check ────────────────────
+              // ── Step 2: Credify alternative-data check ────────────────────
               if (state.lenderStep == LenderStep.bureauChecked ||
-                  state.lenderStep == LenderStep.clovering ||
+                  state.lenderStep == LenderStep.credifying ||
                   state.lenderStep == LenderStep.done)
                 _StepCard(
                   stepNumber: '2',
-                  title: 'Clover Alternative-Data Check',
+                  title: 'Credify Alternative-Data Check',
                   child: state.lenderStep == LenderStep.bureauChecked
                       ? SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: () => state.runCloverAnalysis(),
+                            onPressed: () => state.runCredifyAnalysis(),
                             icon: const Icon(Icons.auto_awesome),
-                            label: const Text('Run Clover Alternative-Data Check'),
+                            label: const Text('Run Credify Alternative-Data Check'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF10B981),
                               foregroundColor: Colors.white,
@@ -104,7 +104,7 @@ class LenderScreen extends StatelessWidget {
                           : state.analyzeError != null
                               ? _ErrorCard(message: state.analyzeError!)
                               : state.analyzeResult != null
-                                  ? _CloverResultView(result: state.analyzeResult!)
+                                  ? _CredifyResultView(result: state.analyzeResult!)
                                   : const SizedBox(),
                 ),
 
@@ -186,10 +186,10 @@ class _BureauDeadEndCard extends StatelessWidget {
   }
 }
 
-// ── Clover result view ───────────────────────────────────────────────────
-class _CloverResultView extends StatelessWidget {
+// ── Credify result view ───────────────────────────────────────────────────
+class _CredifyResultView extends StatelessWidget {
   final AnalyzeResponse result;
-  const _CloverResultView({required this.result});
+  const _CredifyResultView({required this.result});
 
   @override
   Widget build(BuildContext context) {
