@@ -766,6 +766,68 @@ def build_demo_profile_lakshmi() -> Profile:
     return profile
 
 
+def build_demo_profile_ramesh_carpentry() -> Profile:
+    """Hand-tuned demo profile: a stable, ordinary 30-month history.
+
+    NOTE ON ARCHETYPE SUBSTITUTION: the generator has no dedicated
+    "carpentry" archetype -- only street_food_vendor, kirana_store,
+    tailor_salon, gig_worker exist (see Archetype). tailor_salon is used
+    here as the closest available fit: a materials-plus-service small trade
+    with a weekly rhythm, which is a reasonable stand-in for a carpentry
+    business's cashflow shape. This substitution is deliberate and
+    documented here (and in docs/DATA_SCHEMA.md), not a silent guess --
+    adding a real carpentry archetype would need its own generator
+    parameters and is out of scope for a single demo profile.
+    """
+    rng = random.Random(104)
+    tier = HealthTier.STABLE
+    archetype = Archetype.TAILOR_SALON
+
+    profile = build_profile(
+        rng,
+        profile_index=0,
+        archetype=archetype,
+        tier=tier,
+        cash_heavy=False,
+        short_history=False,
+    )
+    profile.meta.profile_id = "demo_ramesh_carpentry"
+    return profile
+
+
+def build_demo_profile_dormancy_gap() -> Profile:
+    """Hand-tuned demo profile: kirana_store, failing, with one long
+    (60-day) dormancy gap carved into the middle of the seen window.
+
+    The generator's own noise model (apply_gaps) only produces short 2-7 day
+    gaps -- realistic for an occasional missed AA data pull, but too brief to
+    read as "this business went dormant" in a live demo. This profile
+    instead has a deliberate, much longer gap removed directly, specifically
+    to demonstrate longest_dry_streak_days / regularity concerns clearly.
+    """
+    rng = random.Random(203)
+    tier = HealthTier.FAILING
+    archetype = Archetype.KIRANA_STORE
+
+    profile = build_profile(
+        rng,
+        profile_index=0,
+        archetype=archetype,
+        tier=tier,
+        cash_heavy=False,
+        short_history=False,
+    )
+
+    gap_start = add_months(profile.meta.history_start_date, 10)
+    gap_end = gap_start + timedelta(days=60)
+    profile.transactions_seen = [
+        t for t in profile.transactions_seen if not (gap_start <= t.date <= gap_end)
+    ]
+
+    profile.meta.profile_id = "demo_dormancy_gap"
+    return profile
+
+
 def monthly_totals(profile: Profile) -> dict[str, dict[str, float]]:
     totals: dict[str, dict[str, float]] = {}
     for t in profile.transactions_seen + profile.transactions_holdout:
@@ -825,9 +887,19 @@ def main() -> None:
     demo_json = demo.model_dump_json(indent=2, exclude_none=False)
     (args.out_dir / "demo_lakshmi.json").write_text(demo_json)
 
+    ramesh = build_demo_profile_ramesh_carpentry()
+    ramesh_json = ramesh.model_dump_json(indent=2, exclude_none=False)
+    (args.out_dir / "demo_ramesh_carpentry.json").write_text(ramesh_json)
+
+    dormancy = build_demo_profile_dormancy_gap()
+    dormancy_json = dormancy.model_dump_json(indent=2, exclude_none=False)
+    (args.out_dir / "demo_dormancy_gap.json").write_text(dormancy_json)
+
     # Committed reference copies (reuse the JSON already serialized above).
     committed_dir = REPO_ROOT / "data"
     (committed_dir / "demo_profile_lakshmi.json").write_text(demo_json)
+    (committed_dir / "demo_profile_ramesh_carpentry.json").write_text(ramesh_json)
+    (committed_dir / "demo_profile_dormancy_gap.json").write_text(dormancy_json)
     if sample_profile_json is not None:
         (committed_dir / "sample_profile.json").write_text(sample_profile_json)
 

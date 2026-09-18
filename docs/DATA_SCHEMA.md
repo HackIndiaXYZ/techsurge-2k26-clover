@@ -193,6 +193,42 @@ business with a clear festival-season spike when its monthly totals are
 printed or plotted, not just to statistically pass the generator's own
 tier logic.
 
+### Two more demo profiles, added to match the frontend's hardcoded ids
+
+The frontend skeleton hardcodes 4 demo profile ids
+(`clover_http_service.dart::getAvailableProfileIds`); only 2 had a matching
+committed profile. `data/demo_profile_ramesh_carpentry.json` and
+`data/demo_profile_dormancy_gap.json` were added to cover the other 2, both
+via `generate_dataset.py` builder functions following the same
+hand-tuning pattern as `build_demo_profile_lakshmi`:
+
+- **`build_demo_profile_ramesh_carpentry`** — `tailor_salon`, `stable` tier,
+  otherwise plain generation (no special tuning). **The generator has no
+  dedicated "carpentry" archetype** — only `street_food_vendor`,
+  `kirana_store`, `tailor_salon`, `gig_worker` exist. `tailor_salon` is used
+  as the closest available fit (a materials-plus-service small trade with a
+  weekly rhythm), a deliberate and documented substitution, not a silent
+  guess. Adding a real carpentry archetype would need its own generator
+  parameters (base revenue, seasonal pattern, expense structure) and was out
+  of scope for a single demo profile.
+- **`build_demo_profile_dormancy_gap`** — `kirana_store`, `failing` tier,
+  with a 60-day gap carved directly out of the middle of its seen window.
+  The generator's own noise model (`apply_gaps`) only produces short 2-7 day
+  gaps, realistic for an occasional missed AA data pull but too brief to
+  read as "this business went dormant" live in a demo; this profile needed
+  a much longer, narratively legible gap, so it is removed directly rather
+  than relying on that noise path. Scores `vitality_score: 15`,
+  `manual_review` — `months_would_cover_emi_of_last_24` drops to 7 of 24 and
+  `ontime_bill_payment_rate` to 24%, both surfacing as concerns. Notably,
+  the 61-day `longest_dry_streak_days` itself does *not* surface as a
+  concern — an honest side effect of that feature's documented coherence-
+  filter behavior (see "Reason codes" below), not a bug in this profile.
+
+Both are served via `GET /api/profiles/{profile_id}` (`backend/api/README.md`),
+not through the bulk-generated, gitignored `/data/generated/` — they're
+committed alongside `demo_profile_lakshmi.json` since they're referenced by
+a fixed, known id, not sampled from the 500+ population.
+
 ---
 
 # Feature extraction, sufficiency and labels
