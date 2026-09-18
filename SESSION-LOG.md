@@ -153,3 +153,29 @@ frontend/lib/
 ### Noticed, not fixed
 - At a 1280x2000 viewport Flutter logs a transient "RenderFlex overflowed by 51 pixels"
   from the AppBar actions slot (`main.dart` ~line 129). Not seen at 1280x1000.
+
+---
+
+## Session 5: Stop the generator writing demo profiles into the training population
+
+### Branch: fix/generator-demo-out-dir (off main 4e5cee1, after PR #7 merged)
+
+### Completed
+- `generate_dataset.py` `main()`: the 4 demo profiles are no longer written to
+  `args.out_dir` (`data/generated/`, the population `build_feature_table` globs), only
+  to their committed `data/demo_profile_*.json` copies, as `docs/DATA_SCHEMA.md`
+  already described. `demo_lakshmi` still enters training via `COMMITTED_SAMPLES`
+  (unchanged); it was previously loaded twice and de-duplicated by id.
+- Verified from an empty `data/generated/`: 520 files, 0 demo files; feature table
+  521 rows, byte-identical; `metrics.json` identical apart from its two run timestamps
+  (not committed); committed demo/sample JSON unchanged; live demo scores unchanged
+  (91.0 / NOT_ASSESSABLE / 15.0 / 70.0). Backend 212 passed, `flutter analyze` 0
+  issues, `flutter test` 17/17.
+
+### Notes
+- The generator never clears `out_dir`, so a machine that ran it before this fix still
+  has stale `data/generated/demo_*.json`. Delete them (or all of `data/generated/`)
+  and regenerate. Session 4's `DEMO_FIXTURE_IDS` guard in `build_feature_table.py`
+  (merged in PR #7) already skips the 3 non-Lakshmi ones.
+- `build_feature_table.load_profiles`' docstring still says the demo profile also lives
+  in the generated dir; left as-is per instruction not to touch that file.
