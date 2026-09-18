@@ -1,1 +1,8 @@
 pydantic>=2.0,<3.0
+
+# Needed only for model/train_scorecard.py and model/validate.py (offline
+# training and evaluation). model/scorecard.py, model/reason_codes.py and
+# model/artifact.py do inference with plain stdlib math over the saved
+# artifact's JSON, so a deployed API does not need numpy/scikit-learn at all.
+numpy>=1.26
+scikit-learn>=1.4

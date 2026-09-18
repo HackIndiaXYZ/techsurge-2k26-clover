@@ -130,6 +130,30 @@ def monthly_total_expenses(
     return totals
 
 
+def monthly_gross_cashflow(
+    transactions: Iterable[Transaction], window: MonthWindow
+) -> dict[str, dict[str, float]]:
+    """Gross inflow and outflow per calendar month, across every counterparty type.
+
+    Unlike `monthly_business_income` (customer-only, reversals netted to zero),
+    this is a full-picture DISPLAY total: every non-noise transaction counts by
+    its own direction, so a reversal shows up as its own entry on the side it
+    actually landed rather than cancelling out. This is what a cashflow chart
+    shown to a lender should look like -- not a scoring input, and not used by
+    feature_engine or label_engine.
+    """
+    totals = {key: {"inflow": 0.0, "outflow": 0.0} for key in iter_month_keys(window)}
+    for tx in transactions:
+        if is_noise(tx):
+            continue
+        key = month_key(tx.date)
+        if key not in totals:
+            continue
+        side = "inflow" if tx.direction == Direction.IN else "outflow"
+        totals[key][side] += tx.amount
+    return totals
+
+
 def indicative_emi(monthly_income: dict[str, float]) -> float:
     """Indicative monthly EMI: 20% of median monthly income.
 
