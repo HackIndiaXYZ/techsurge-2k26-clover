@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'mock_backend.dart';
 import 'services/clover_api_service.dart';
+import 'services/clover_http_service.dart';
 import 'state/app_state.dart';
 import 'screens/lender_screen.dart';
 import 'screens/consent_screen.dart';
@@ -9,29 +10,17 @@ import 'screens/portfolio_screen.dart';
 import 'screens/borrower_screen.dart';
 import 'widgets/disclaimer_banner.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Toggle: set _useMock = false (and baseUrl) to connect to the live FastAPI
-// backend. No screen widget changes are needed — only this one flag.
-// ─────────────────────────────────────────────────────────────────────────────
-const bool _useMock = true;
-// When flipping to live: change _useMock to false and pass baseUrl to CloverHttpService.
-// ignore: constant_identifier_names
+// Live FastAPI backend by default. Run with --dart-define=CLOVER_USE_MOCK=true
+// to use the in-memory MockBackend instead, and --dart-define=CLOVER_API_URL=...
+// to point at a server other than http://localhost:8000.
+const bool _useMock = bool.fromEnvironment('CLOVER_USE_MOCK');
 const String _kBaseUrl = String.fromEnvironment('CLOVER_API_URL', defaultValue: 'http://localhost:8000');
 
 void main() {
   final CloverApiService service =
-      _useMock ? MockBackend() : _buildHttpService();
+      _useMock ? MockBackend() : CloverHttpService(baseUrl: _kBaseUrl);
 
   runApp(CloverApp(service: service));
-}
-
-CloverApiService _buildHttpService() {
-  // Import only when not using mock — avoids dart:io on web in mock-only builds.
-  // When flipping to live: add `import 'services/clover_http_service.dart';`
-  // and replace MockBackend() above with CloverHttpService(baseUrl: _kBaseUrl).
-  throw UnimplementedError(
-    'Set _useMock = true or import CloverHttpService(baseUrl: $_kBaseUrl)',
-  );
 }
 
 class CloverApp extends StatelessWidget {

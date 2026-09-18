@@ -19,9 +19,11 @@ from pathlib import Path
 
 from backend.features.feature_engine import FEATURE_NAMES
 from backend.scripts.build_feature_table import (
+    DEMO_FIXTURE_IDS,
     FEATURE_TABLE_COLUMNS,
     FORBIDDEN_IN_FEATURE_TABLE,
     LABEL_FILE_COLUMNS,
+    load_profiles,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -49,6 +51,22 @@ class TestFeatureTableSchema(unittest.TestCase):
 
     def test_label_file_is_gitignored(self):
         self.assertIn("labels_holdout.csv", GITIGNORE.read_text())
+
+
+class TestDemoFixturesExcludedFromTraining(unittest.TestCase):
+    def test_demo_fixtures_in_the_generated_dir_are_not_loaded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            generated = Path(tmp) / "generated"
+            generated.mkdir()
+            for name in ("thin_file", "ramesh_carpentry", "dormancy_gap"):
+                src = DATA_DIR / f"demo_profile_{name}.json"
+                (generated / f"demo_{name}.json").write_text(src.read_text())
+            (generated / "MSME0003.json").write_text((DATA_DIR / "sample_profile.json").read_text())
+
+            loaded = {p.meta.profile_id for p in load_profiles(generated)}
+
+        self.assertEqual(loaded, {"MSME0003"})
+        self.assertEqual(DEMO_FIXTURE_IDS, {"demo_thin_file", "demo_ramesh_carpentry", "demo_dormancy_gap"})
 
 
 class TestBuiltFeatureTable(unittest.TestCase):

@@ -567,7 +567,8 @@ class _ReasonTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Feature: ${item.feature}  ·  Weight: ${(item.contribution * 100).abs().toStringAsFixed(0)}%',
+                  // contribution is an unbounded log-odds term (coefficient x z-score), not a fraction.
+                  'Feature: ${item.feature}  ·  Contribution: ${item.contribution >= 0 ? '+' : ''}${item.contribution.toStringAsFixed(2)}',
                   style: const TextStyle(
                     color: Color(0xFF6B7280),
                     fontSize: 11,

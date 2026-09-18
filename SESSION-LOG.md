@@ -60,7 +60,96 @@ frontend/lib/
 
 ---
 
-## Previous sessions
+---
 
-None — this is the first agent session on this repo.
-(Teammate `yash/backend` branch: feature extraction, sufficiency gates, held-out labels — merged to main via PR#2)
+## Session 2: Mock alignment with trained model (91.0 score)
+
+### Completed
+- In `frontend/lib/mock_backend.dart`: updated `_lakshmi` vitality_score from 71.5 to 91.0 (matching real trained model for `demo_lakshmi`).
+- Updated `_lakshmi` reason codes and affordability to be internally consistent with 91.0 score:
+  - Strengths: `ontime_bill_payment_rate` (+0.729), `months_would_cover_emi_of_last_24` (+0.549), `trend_last_6_months` (+0.514).
+  - Concerns: empty list (strong candidate, 0 concerns).
+  - Affordability: `indicative_emi_low: 8989.59`, `indicative_emi_high: 13606.68`, `months_would_cover_emi_of_last_24: 24`.
+- In `frontend/lib/services/clover_http_service.dart`: added TODO comment above `getAvailableProfileIds()` noting pending confirmation with backend on exact demo profile IDs in `/data`. Left IDs and `analyzeProfile()` untouched.
+- In `frontend/test/clover_test.dart`: updated test assertion from 71.5 to 91.0.
+- Verification: `flutter analyze` passed (0 issues), `flutter test` passed (15/15 tests).
+
+### Rejected alternatives
+- Did NOT modify `analyzeProfile()` request body or URL in `clover_http_service.dart` — waiting for backend's `GET /api/profiles/{profile_id}` endpoint to be shipped and confirmed.
+- Did NOT alter demo profile IDs in `clover_http_service.dart` pending backend confirmation.
+
+
+---
+
+## Session 3: Live backend wire-up + end-to-end verification
+
+### Branch: integration/e2e-wireup (off main 3695262, merges praneeth/frontend 24dfd27)
+
+### Completed
+- `clover_http_service.dart`: `analyzeProfile()` now calls `GET /api/profiles/{id}`
+  (`Accept: application/json`) instead of `POST /api/analyze` with only a
+  `profile_id` body, which 422'd. Removed the "pending confirmation" TODO; the 4
+  ids are final and backed by files in `/data`.
+- `main.dart`: live backend is now the default. `_useMock` reads
+  `--dart-define=CLOVER_USE_MOCK=true`; `CLOVER_API_URL` still overrides the
+  `http://localhost:8000` default. (This supersedes Session 1's
+  "`_useMock = true`" and "HTTP implementation (not activated)" notes.)
+- `portfolio_screen.dart`: the "ILLUSTRATIVE PLACEHOLDER" subtitle is shown only
+  with MockBackend; live data is labelled as live.
+- `clover_test.dart`: 2 `MockClient` tests pin the call site (GET, URL, Accept
+  header, non-2xx throws). Verified the first fails against the old POST code.
+- Verified: backend 211 passed; `flutter analyze` 0 issues; `flutter test` 17/17;
+  all 4 ids clicked through in Chrome (Consent -> Approve -> Bureau -> Clover)
+  against a live uvicorn server.
+
+### Live results (model trained on the committed 521-profile feature table)
+- lakshmi_vendor_001 — SCORED 91.0 strong_candidate
+- thin_file_002 — NOT_ASSESSABLE (5 months of history)
+- dormancy_gap_003 — SCORED 15.0 manual_review
+- ramesh_carpentry_004 — SCORED 70.0 manual_review
+
+### Open issues (not fixed here)
+- dormancy_gap_003 and ramesh_carpentry_004 are SCORED on the real backend (as
+  documented in backend/api/README.md), but MockBackend still has them as
+  NOT_ASSESSABLE / LOW_CONFIDENCE. The demo narrative needs to pick one.
+- A fresh train from main pulls `data/generated/demo_{thin_file,dormancy_gap,
+  ramesh_carpentry}.json` into the training set (521 -> 524 profiles), which moves
+  Lakshmi to 93.0, dormancy to 10.0 high_risk_referral, ramesh to 68.0. The committed
+  `metrics.json`/`feature_table.csv` predate those demos. Backend fix: exclude
+  `demo_*` from `build_feature_table`.
+- Reason-code "Weight" renders raw contributions as percentages (e.g. 768%) on
+  dormancy_gap_003.
+- `pubspec.yaml` requires Dart ^3.13.3, i.e. Flutter >= 3.47.4.
+
+---
+
+## Session 4: Close out Session 3's open issues (same branch, PR #7)
+
+### Completed
+- `backend/scripts/build_feature_table.py`: `DEMO_FIXTURE_IDS` (`demo_thin_file`,
+  `demo_ramesh_carpentry`, `demo_dormancy_gap`) are skipped in `load_profiles`, so a
+  retrain from a fresh `generate_dataset` can no longer pull hand-tuned demo fixtures
+  into training. `demo_lakshmi` is deliberately NOT excluded: it is row 522 of the
+  committed feature table and the committed model was trained with it, so excluding
+  it would change `metrics.json` and Lakshmi's own score.
+  Verified: generate -> build_feature_table -> train -> validate gives a byte-identical
+  `feature_table.csv` (521 rows) and a `metrics.json` identical to the committed one
+  apart from the two run timestamps (not committed). New test
+  `TestDemoFixturesExcludedFromTraining`, which fails with the exclusion disabled.
+- `lender_screen.dart`: reason-code line showed `contribution * 100` as "Weight: N%".
+  `contribution` is an unbounded log-odds term (coefficient x z-score), not a fraction,
+  and the API only returns the top 3 per side, so it cannot be normalised to a share
+  client-side. Now shows the signed raw value, "Contribution: -7.68", matching the
+  backend docs' own wording.
+- Verified: backend 212 passed; `flutter analyze` 0 issues; `flutter test` 17/17; all 4
+  ids clicked through in Chrome against live uvicorn, no console errors at 1280x1000.
+  dormancy_gap_003 now reads +3.99 +0.42 +0.07 / -7.68 -1.75 -1.45 (was 399%...768%).
+
+### Decisions
+- dormancy_gap_003 and ramesh_carpentry_004 stay SCORED (demo narrative decision).
+  `MockBackend` still has them as NOT_ASSESSABLE / LOW_CONFIDENCE; this only matters
+  with `--dart-define=CLOVER_USE_MOCK=true`.
+
+### Noticed, not fixed
+- At a 1280x2000 viewport Flutter logs a transient "RenderFlex overflowed by 51 pixels"
+  from the AppBar actions slot (`main.dart` ~line 129). Not seen at 1280x1000.

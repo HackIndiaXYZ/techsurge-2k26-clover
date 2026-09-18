@@ -26,11 +26,10 @@ class CloverHttpService implements CloverApiService {
 
   @override
   Future<AnalyzeResponse> analyzeProfile(String profileId) async {
-    final uri = Uri.parse('$baseUrl/api/analyze');
-    final response = await _client.post(
+    final uri = Uri.parse('$baseUrl/api/profiles/$profileId');
+    final response = await _client.get(
       uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'profile_id': profileId}),
+      headers: {'Accept': 'application/json'},
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
