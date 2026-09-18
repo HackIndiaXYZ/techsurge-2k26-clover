@@ -141,3 +141,13 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Bulk synthetic dataset (regenerate with backend/generator/generate_dataset.py)
+/data/generated/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
