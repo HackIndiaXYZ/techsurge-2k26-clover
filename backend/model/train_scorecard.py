@@ -334,6 +334,10 @@ def main() -> None:
         band_cutoffs=band_cutoffs,
         train_profile_ids=tuple(ids_train),
         test_profile_ids=tuple(ids_test),
+        # Same split band_cutoffs was calibrated from -- see the field's
+        # docstring in artifact.py for why score and band deliberately share
+        # one reference cohort.
+        reference_default_probabilities=tuple(sorted(p_default_test)),
     )
     artifact.save(args.artifact_path)
     print(f"\nSaved artifact -> {args.artifact_path}")

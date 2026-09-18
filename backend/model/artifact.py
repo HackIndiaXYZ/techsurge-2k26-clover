@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import math
+from bisect import bisect_right
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -108,6 +109,19 @@ class ScorecardArtifact:
     band_cutoffs: BandCutoffs
     train_profile_ids: tuple[str, ...]
     test_profile_ids: tuple[str, ...]
+    # Sorted (ascending) predicted default probabilities of the TEST split,
+    # frozen at training time. This is the reference distribution
+    # vitality_score is ranked against -- see
+    # vitality_score_from_default_probability below. Deliberately the same
+    # split band_cutoffs is calibrated from (not the training split): a
+    # profile's score and its band should read as mutually consistent, since
+    # both are "how does this compare to the reference cohort" statements
+    # drawn from the same cohort. This does not compromise auc_test's
+    # validity -- score/band calibration happens strictly after AUC is
+    # computed and never feeds back into how the model was fit, so it carries
+    # none of the overfitting risk that reusing test data for model selection
+    # would.
+    reference_default_probabilities: tuple[float, ...]
 
     def to_json_dict(self) -> dict:
         return {
@@ -125,6 +139,7 @@ class ScorecardArtifact:
             },
             "train_profile_ids": list(self.train_profile_ids),
             "test_profile_ids": list(self.test_profile_ids),
+            "reference_default_probabilities": list(self.reference_default_probabilities),
         }
 
     @classmethod
@@ -144,6 +159,9 @@ class ScorecardArtifact:
             ),
             train_profile_ids=tuple(d["train_profile_ids"]),
             test_profile_ids=tuple(d["test_profile_ids"]),
+            reference_default_probabilities=tuple(
+                sorted(float(v) for v in d["reference_default_probabilities"])
+            ),
         )
 
     def save(self, path: Path = ARTIFACT_PATH) -> None:
@@ -198,15 +216,56 @@ def predict_default_probability(
     return 1.0 - predict_vitality_probability(artifact, feature_values)
 
 
-def vitality_score_from_default_probability(p_default: float) -> int:
-    """vitality_score = round(100 * (1 - p_default)), clipped to [0, 100].
+def vitality_score_from_default_probability(
+    artifact: ScorecardArtifact, p_default: float
+) -> int:
+    """vitality_score: this profile's percentile rank against the TRAINING
+    population's predicted default probabilities, inverted so 100 is safest.
 
     The one place this formula is written. scorecard.py and validate.py both
     call this rather than each re-deriving it, so a future edit to the
-    rounding/clipping rule cannot update one call site and silently miss
-    another.
+    ranking rule cannot update one call site and silently miss another.
+
+    WHY PERCENTILE RANK, NOT A LINEAR 100*(1-p_default) TRANSFORM:
+    predicted default probabilities on this dataset are heavily skewed --
+    most profiles are genuinely low-risk, so a linear transform crushes the
+    vast majority of the population into the 90-100 range (this was measured:
+    83.8% of FULL profiles landed in that one bucket) and leaves almost no
+    resolution to tell a merely-good business from an excellent one. A rank
+    transform fixes this by construction: mapping through the empirical CDF
+    of a reference population always produces an exactly uniform score
+    distribution ON that reference population, and an approximately uniform
+    one on any new population drawn from a similar distribution.
+
+    The trade-off, stated plainly: vitality_score stops being a direct read
+    of "probability this business does not default" and becomes "how this
+    business's risk compares to the training cohort's risk distribution."
+    That is a real change in what the number means, not a free lunch --
+    documented in docs/DATA_SCHEMA.md. It is also exactly how many real
+    credit scores work (e.g. a 3-digit score is a rescaled rank against a
+    reference population, not PD read off directly), so it is a defensible,
+    precedented choice rather than an ad hoc one.
+
+    The reference distribution is frozen at training time (the TEST split's
+    own predicted default probabilities, sorted -- the same split
+    band_cutoffs is calibrated from, so a profile's score and band are
+    consistent statements about the same reference cohort) and travels
+    inside the artifact, so a score computed today and one computed next
+    month against the same trained model mean the same thing -- it does not
+    silently drift depending on who else happens to be in today's batch of
+    API calls.
     """
-    return max(0, min(100, round(100 * (1 - p_default))))
+    reference = artifact.reference_default_probabilities
+    if not reference:
+        # Only reachable with a hand-built artifact that omitted the
+        # reference distribution (e.g. an old test fixture); a real trained
+        # artifact always has one. Falls back to the plain linear transform
+        # rather than dividing by zero.
+        return max(0, min(100, round(100 * (1 - p_default))))
+
+    rank = bisect_right(reference, p_default)
+    percentile_of_default_risk = rank / len(reference)  # 0 = safest, 1 = riskiest
+    return max(0, min(100, round(100 * (1 - percentile_of_default_risk))))
 
 
 def compute_contributions(
