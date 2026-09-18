@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:clover_frontend/models/analyze_response.dart';
 import 'package:clover_frontend/models/portfolio_response.dart';
 import 'package:clover_frontend/mock_backend.dart';
+import 'package:clover_frontend/services/clover_http_service.dart';
 
 void main() {
   group('AnalyzeResponse model', () {
@@ -255,6 +259,52 @@ void main() {
               reason: '$id is NOT_ASSESSABLE but vitalityScore is non-null');
         }
       }
+    });
+  });
+
+  group('CloverHttpService', () {
+    test('analyzeProfile GETs /api/profiles/{id} (not POST /api/analyze)', () async {
+      late http.Request sent;
+      final service = CloverHttpService(
+        client: MockClient((req) async {
+          sent = req;
+          return http.Response(
+            jsonEncode({
+              'profile_id': 'thin_file_002',
+              'outcome': 'NOT_ASSESSABLE',
+              'vitality_score': null,
+              'band': null,
+              'confidence': null,
+              'reason_codes': {'strengths': [], 'concerns': []},
+              'affordability': {
+                'indicative_emi_low': 30203.87,
+                'indicative_emi_high': 36915.84,
+                'months_would_cover_emi_of_last_24': 5,
+              },
+              'monthly_cashflow': [],
+              'coverage_reason': 'Not assessable: only 5 months of history.',
+              'disclaimer': 'Research prototype on synthetic data.',
+            }),
+            200,
+            headers: {'content-type': 'application/json; charset=utf-8'},
+          );
+        }),
+      );
+
+      final result = await service.analyzeProfile('thin_file_002');
+
+      expect(sent.method, 'GET');
+      expect(sent.url.toString(), 'http://localhost:8000/api/profiles/thin_file_002');
+      expect(sent.headers['Accept'], 'application/json');
+      expect(result.profileId, 'thin_file_002');
+      expect(result.outcome, 'NOT_ASSESSABLE');
+    });
+
+    test('analyzeProfile throws on a non-2xx response', () async {
+      final service = CloverHttpService(
+        client: MockClient((_) async => http.Response('{"detail":"unknown"}', 404)),
+      );
+      expect(service.analyzeProfile('nope'), throwsException);
     });
   });
 }

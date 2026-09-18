@@ -78,3 +78,45 @@ frontend/lib/
 - Did NOT modify `analyzeProfile()` request body or URL in `clover_http_service.dart` — waiting for backend's `GET /api/profiles/{profile_id}` endpoint to be shipped and confirmed.
 - Did NOT alter demo profile IDs in `clover_http_service.dart` pending backend confirmation.
 
+
+---
+
+## Session 3: Live backend wire-up + end-to-end verification
+
+### Branch: integration/e2e-wireup (off main 3695262, merges praneeth/frontend 24dfd27)
+
+### Completed
+- `clover_http_service.dart`: `analyzeProfile()` now calls `GET /api/profiles/{id}`
+  (`Accept: application/json`) instead of `POST /api/analyze` with only a
+  `profile_id` body, which 422'd. Removed the "pending confirmation" TODO; the 4
+  ids are final and backed by files in `/data`.
+- `main.dart`: live backend is now the default. `_useMock` reads
+  `--dart-define=CLOVER_USE_MOCK=true`; `CLOVER_API_URL` still overrides the
+  `http://localhost:8000` default. (This supersedes Session 1's
+  "`_useMock = true`" and "HTTP implementation (not activated)" notes.)
+- `portfolio_screen.dart`: the "ILLUSTRATIVE PLACEHOLDER" subtitle is shown only
+  with MockBackend; live data is labelled as live.
+- `clover_test.dart`: 2 `MockClient` tests pin the call site (GET, URL, Accept
+  header, non-2xx throws). Verified the first fails against the old POST code.
+- Verified: backend 211 passed; `flutter analyze` 0 issues; `flutter test` 17/17;
+  all 4 ids clicked through in Chrome (Consent -> Approve -> Bureau -> Clover)
+  against a live uvicorn server.
+
+### Live results (model trained on the committed 521-profile feature table)
+- lakshmi_vendor_001 — SCORED 91.0 strong_candidate
+- thin_file_002 — NOT_ASSESSABLE (5 months of history)
+- dormancy_gap_003 — SCORED 15.0 manual_review
+- ramesh_carpentry_004 — SCORED 70.0 manual_review
+
+### Open issues (not fixed here)
+- dormancy_gap_003 and ramesh_carpentry_004 are SCORED on the real backend (as
+  documented in backend/api/README.md), but MockBackend still has them as
+  NOT_ASSESSABLE / LOW_CONFIDENCE. The demo narrative needs to pick one.
+- A fresh train from main pulls `data/generated/demo_{thin_file,dormancy_gap,
+  ramesh_carpentry}.json` into the training set (521 -> 524 profiles), which moves
+  Lakshmi to 93.0, dormancy to 10.0 high_risk_referral, ramesh to 68.0. The committed
+  `metrics.json`/`feature_table.csv` predate those demos. Backend fix: exclude
+  `demo_*` from `build_feature_table`.
+- Reason-code "Weight" renders raw contributions as percentages (e.g. 768%) on
+  dormancy_gap_003.
+- `pubspec.yaml` requires Dart ^3.13.3, i.e. Flutter >= 3.47.4.

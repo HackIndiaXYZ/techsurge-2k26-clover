@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../mock_backend.dart';
 import '../models/portfolio_response.dart';
 import '../services/clover_api_service.dart';
 import '../widgets/score_histogram_chart.dart';
@@ -58,9 +59,11 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Aggregate signal metrics — ILLUSTRATIVE PLACEHOLDER data until live backend is connected.',
-            style: TextStyle(
+          Text(
+            widget.service is MockBackend
+                ? 'Aggregate signal metrics — ILLUSTRATIVE PLACEHOLDER data (mock backend).'
+                : 'Aggregate signal metrics — live from the Clover backend.',
+            style: const TextStyle(
               color: Color(0xFF6B7280),
               fontSize: 12,
               fontFamily: 'Inter',
