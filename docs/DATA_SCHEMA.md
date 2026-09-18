@@ -543,3 +543,301 @@ dependency-free (standard library only, beyond the pydantic the generator
 already required) so any teammate can run it without setting up an environment.
 The feature table is small enough (~105 KB) to commit, unlike the bulk profile
 data, which stays gitignored and regenerable.
+
+---
+
+# Scorecard model, reason codes and validation
+
+This documents the third stage of the pipeline: a logistic regression trained
+on Y2's feature table, and the inference layer (`backend/model/scorecard.py`)
+that turns a profile into an `AnalyzeResponse` matching Y1's API contract
+exactly.
+
+## Leakage safety, carried into the model layer
+
+`train_scorecard.py` never reads a raw transaction. It reads
+`data/feature_table.csv` (already computed from months 1-24 only, by Y2) and
+`data/labels_holdout.csv` (already derived from months 25-30 only, by Y2) and
+fits on the numbers, not the dates. The genuinely new leakage surface Y3
+introduces is `scorecard.py`'s affordability and monthly-cashflow blocks,
+which are computed directly from `profile.transactions_seen` outside of
+`extract_features` -- a second, independent place a future edit could wire up
+`transactions_holdout` by mistake.
+
+That surface is tested the same way Y2 tested `extract_features`:
+`backend/tests/test_model_leakage.py` runs the entire `analyze_profile()`
+pipeline against a profile whose held-out window is mutated (amounts
+inflated 1000x, emptied, directions flipped) and asserts the response is
+byte-for-byte identical regardless. The mutation is placed deliberately at a
+date *inside* the seen window, not at the real split boundary -- a leak
+placed right at the boundary gets filtered out by ordinary month-key
+matching regardless of which list it came from, so a test built that way
+would prove only that date filtering works, not that
+`transactions_holdout` is actually unread. Verified by deliberately wiring
+both blocks to read `transactions_seen + transactions_holdout`: both
+mutations were caught (6 failures each), and the clean code passes cleanly.
+
+`train_scorecard.py` also refuses, structurally, to train on anything the
+sufficiency gate would refuse to score: a labeled row whose
+`sufficiency_outcome` is not `FULL` is excluded before it reaches the
+regression (`load_training_table`, tested in `test_model_leakage.py`), so the
+model was never fit on a trail it would then decline to score at inference
+time -- and the reverse holds too, since `scorecard.py` never calls the model
+for anything but a `FULL` profile.
+
+## Training
+
+`python3 -m backend.model.train_scorecard` (needs the venv described below --
+this is the one part of the pipeline that needs numpy/scikit-learn).
+
+- **Population**: every profile with `sufficiency_outcome == FULL` AND a
+  label in `labels_holdout.csv` -- 506 of the 521 profiles. On the current
+  dataset this happens to be the full labeled set (every labeled profile is
+  FULL), but the check is explicit and enforced, not assumed.
+- **Split**: stratified on the label, by profile_id (the table is already one
+  row per business), `test_size=0.25`, `random_state=42` -- 379 train / 127
+  test. Every FULL+labeled profile has exactly 24 months of seen history
+  (asserted before training proceeds), which is what makes the flagship
+  affordability feature's raw count comparable across the population without
+  normalization -- see the warning in `feature_engine.py`.
+- **Standardization**: z-score, `StandardScaler` fit on the training split
+  only, applied to both splits.
+- **Target**: the model is fit on **vitality** (1 = no default), not default
+  directly -- i.e. `y = 1 - label`. This is so a positive coefficient always
+  means "this feature helps this business," matching the reason-code
+  contribution formula (`coefficient x standardized value`, positive =
+  strength) literally, with no sign-flipping needed downstream.
+  `vitality_score = round(100 x P(vitality=1))`, equivalently
+  `round(100 x (1 - p_default))`. AUC is still reported in the standard
+  "predicting default" framing -- numerically identical either way, since AUC
+  is invariant under flipping both the label and the score direction.
+- **Model**: `LogisticRegression(C=0.3, max_iter=2000, random_state=42)`. `C`
+  was chosen by 5-fold cross-validation **on the training split only**
+  (never touching the test split) over `C in {1.0, 0.5, 0.3, 0.2, 0.1, 0.05,
+  0.02, 0.01}`: mean CV AUC peaked at `C=0.3` (0.9772 ± 0.0138), close to the
+  unregularized default (0.9763), and degraded below `C=0.1` as
+  regularization began erasing real signal. This was deliberately not tuned
+  against the test-set AUC -- a single ~127-row test split is noisy enough
+  that chasing its number would just fit the hyperparameter to that noise.
+- **Predictive features**: 10 of the 12, not 12. `digital_share` and
+  `cash_share` are excluded from the regression entirely -- see "Fairness in
+  the model itself" below.
+
+## Fairness in the model itself, not just at feature-extraction time
+
+Y2 documented that `digital_share`/`cash_share` are "informational only,
+never used to penalize cash-heavy businesses." Y3 enforces that literally:
+`backend.model.artifact.PREDICTIVE_FEATURES` excludes both, so they are
+**never part of the regression's input matrix**. They have no coefficient,
+so `compute_contributions` never produces a value for them, so they can
+never appear in `reason_codes.strengths` or `reason_codes.concerns`, and they
+cannot move `vitality_score` by so much as a rounding error. This is checked
+behaviourally in `test_model_artifact.py`: two feature dictionaries identical
+except for `digital_share`/`cash_share` produce **exactly** the same
+predicted probability.
+
+This is also the statistically correct call independent of fairness:
+`digital_share + cash_share == 1` exactly (perfect collinearity), which would
+make their individual coefficients numerically unstable and essentially
+arbitrary -- a second, values-independent reason to exclude both rather than
+leave the split to solver behaviour.
+
+## A real finding: three coefficients have counter-intuitive signs
+
+Multicollinearity among the 10 predictive features means 3 of them fit with a
+sign that disagrees with plain domain intuition in the current model:
+
+| Feature | Fitted coefficient (vitality target) | Naive expectation | Why |
+|---|---|---|---|
+| `worst_monthly_dip_pct` | +0.71 | negative (a worse dip should hurt) | Collinear with the growth-trend features (r = -0.52 to -0.70 with `trend_last_6_months`/`year_over_year_change`/`ontime_bill_payment_rate`), which carry the real signal; its own univariate correlation with default (r = +0.31) **is** in the intuitive direction. |
+| `pct_weeks_with_income` | -0.25 | positive (more weeks earning should help) | Near-zero univariate correlation with default (r = +0.07) once a profile has already cleared the FULL sufficiency gate -- the gate itself is what filters for a readable weekly rhythm, so little independent variance is left to explain. |
+| `longest_dry_streak_days` | +0.08 | negative (longer gaps should hurt) | Same story, r = -0.02 -- essentially no independent signal in this cohort. Small magnitude, rarely decisive. |
+
+This was checked, not guessed: cross-validated regularization (above) does
+not fix it -- these two features simply carry little independent signal in
+the FULL cohort, and no amount of `C` recovers signal that is not there.
+
+**This is not swept under the rug in the reason codes.** Each feature
+template carries an `is_favorable(value)` domain check independent of the
+model. A candidate reason code is only accepted if the raw value's own
+favorable/unfavorable read **agrees** with the bucket the statistical
+contribution is proposing; a disagreement is skipped, not shown backwards.
+Concretely, this means a profile with income arriving in 98% of weeks will
+never see that reported as a concern, even though the fitted coefficient
+technically points that way for some profiles -- the mismatch is caught and
+the reason code is silently omitted instead. Measured across the whole FULL
+cohort, this is why `worst_monthly_dip_pct` appears in a reason code for only
+3.0% of profiles and `pct_weeks_with_income` for only 9.5%, versus 87.9% for
+`ontime_bill_payment_rate` (a cleanly-signed, high-signal feature) -- see
+"Reason-code frequency" below for the full table. See
+`backend/model/reason_codes.py`'s module docstring for the complete
+reasoning and `test_model_reason_codes.py::TestCoherenceFiltering` for the
+test that proves a flipped-sign feature is skipped rather than misreported.
+
+## Score formula
+
+    p_default = 1 - sigmoid(intercept + sum(coefficient[f] * standardized_value[f] for f in the 10 predictive features))
+    vitality_score = round(100 * (1 - p_default))   # clipped to [0, 100]
+
+Implemented once, in `backend/model/artifact.py`, and reused identically by
+training-time evaluation, `validate.py`, and `scorecard.py` -- the classic
+"looks good in the notebook, wrong in production" bug is a model that scores
+differently depending on who re-implements the arithmetic; there is exactly
+one implementation here.
+
+## Band cutoffs -- calibrated, not guessed
+
+Thresholds on **predicted default probability**, calibrated from the actual
+distribution on the held-out test split (never guessed round numbers):
+
+| Band | Condition | Cutoff (predicted default probability) |
+|---|---|---|
+| `strong_candidate` | `p_default <= P25` of the test set | 0.0058 |
+| `manual_review` | everything between | -- |
+| `high_risk_referral` | `p_default >= P90` of the test set | 0.4181 |
+
+**Reasoning:** the base default rate in this dataset is ~9.9%. The top
+decile (`P90`) of predicted risk is therefore where a reasonably
+discriminating model should concentrate most of the actual defaults, making
+it a defensible line for "refer for manual underwriting." The bottom quartile
+(`P25`) is a comfortably-sized "clear pass" tier without being so narrow it
+is useless to a lender. Checked empirically against the test set's actual
+outcomes (not just picked and left unverified):
+
+- At the `P90` cutoff (0.4181): **14 of 127** test profiles were referred,
+  and **10 of those 14** were actual defaults — **71% precision** at that
+  threshold.
+- At the `P25` cutoff (0.0058): **33 of 127** test profiles passed, and
+  **0 of those 33** were actual defaults — the "clear pass" tier really was
+  clear on this split.
+
+### Resulting band distribution (all 506 FULL profiles, trained model)
+
+| Band | Count | Share |
+|---|---|---|
+| `strong_candidate` | 145 | 28.7% |
+| `manual_review` | 313 | 61.9% |
+| `high_risk_referral` | 48 | 9.5% |
+
+## Validation results
+
+`python3 -m backend.model.validate` (also needs the venv). Everything below
+is read from the committed `backend/model/artifacts/metrics.json`.
+
+- **AUC (test split, n=127): 0.9595.** Meaningfully above 0.5, and high for a
+  credit model. Worth explaining honestly rather than presenting as an
+  unqualified win: this dataset's label is a deterministic, rules-based
+  function of held-out-window cashflow (Y2's `label_engine.py`:
+  income vs. EMI + essentials), and the same underlying business-health
+  parameters drive both the seen window (what the features measure) and the
+  held-out window (what the label measures) in the generator. A high AUC is
+  therefore an expected property of a well-designed behavioral feature set on
+  data structured this way, not evidence of a temporal leak across the 24/6
+  boundary -- that boundary is independently verified by the invariance
+  tests above. A real-world AUC in production, with a noisier, non-synthetic
+  relationship between history and outcome, should be expected to run lower.
+- **Coverage (all 521 profiles, gate-driven -- single source of truth from
+  Y2's `sufficiency_outcome` column, not a model estimate):**
+
+  | Outcome | Count | Share |
+  |---|---|---|
+  | `SCORED` (sufficiency `FULL`) | 506 | 97.12% |
+  | `LOW_CONFIDENCE` | 10 | 1.92% |
+  | `NOT_ASSESSABLE` | 5 | 0.96% |
+
+- **Score histogram -- flagged as degenerate, honestly.** 424 of 506 scored
+  profiles (83.8%) land in the 90-100 bucket; the other nine buckets share
+  the remaining 82 profiles thinly. `validate.py` prints a warning whenever
+  one bucket exceeds 50% of the mass, and this run trips it. The explanation
+  is the same one behind the high AUC: the label is ~90% "no default," and a
+  well-separating model correctly pushes most of that healthy majority close
+  to 100 -- this is the expected shape of a skewed-label, high-AUC scorecard,
+  not a bug, but it does mean the top band has limited resolution for
+  distinguishing "good" from "excellent" among the 424 profiles bunched
+  there. A finer-grained top-of-scale treatment (e.g. a log-odds display, or
+  widening `manual_review`) would be worth considering before this ships in
+  a real product, but is out of scope for this task.
+- **Reason-code frequency**, across all 506 scored profiles (coherence-filtered
+  as described above):
+
+  | Feature | Appeared in |
+  |---|---|
+  | `ontime_bill_payment_rate` | 87.9% |
+  | `months_would_cover_emi_of_last_24` | 72.7% |
+  | `expense_to_income_ratio` | 70.2% |
+  | `trend_last_6_months` | 65.0% |
+  | `year_over_year_change` | 37.9% |
+  | `income_coefficient_of_variation` | 18.2% |
+  | `longest_dry_streak_days` | 12.5% |
+  | `cash_buffer_days` | 11.3% |
+  | `pct_weeks_with_income` | 9.5% |
+  | `worst_monthly_dip_pct` | 3.0% |
+
+## 12-vs-24-month stability check -- an honest, significant finding
+
+25 test-split profiles were re-scored with their seen window truncated to
+their first 12 months, and compared against their normal 24-month score.
+**This bypasses the sufficiency gate on purpose**, since a real 12-month
+profile is `LOW_CONFIDENCE` and would never reach the model in production
+(`analyze_profile` would return `vitality_score: null`); the point is to
+measure the underlying model's raw sensitivity to reduced history, not to
+claim a 12-month profile would actually be scored.
+
+**Result: scores do NOT stay close.** Mean absolute difference **79.84
+points**, max **94 points**, and **24 of the 25** profiles swung by more than
+20 points. This is reported as-is, not smoothed over.
+
+**Root cause, diagnosed rather than guessed:** `months_would_cover_emi_of_last_24`
+has the largest-magnitude coefficient (+1.19) and is on a 0-24 scale in the
+training population (every FULL profile has 24 seen months). Evaluated on a
+12-month-truncated profile, the same feature is recomputed from scratch and
+naturally caps at 12 -- roughly half its normal range. Worked example
+(`MSME0001`): the raw count drops from 22 (of 24) to 10 (of 12), and because
+the scaler's mean/scale were fit on the 24-month population, the standardized
+value collapses from z = -0.35 to z = -5.22 -- more than five standard
+deviations outside anything the model saw during training. At a coefficient
+of +1.19, that single feature's swing alone moves the logit by roughly -5.8,
+enough on its own to move a healthy profile's predicted probability from
+near-certain to near-zero.
+
+This is exactly the risk `feature_engine.py` already flagged in its own
+docstring for this feature ("this is an ABSOLUTE COUNT... ranking profiles on
+the raw count would penalize a thin file for being thin") -- the stability
+check turns that documented warning into a measured, quantified effect. It
+is a genuine limitation of directly reusing the flagship feature outside its
+original 24-month context, not a bug in the arithmetic, and matters directly
+for a follow-up task: a model meant to reasonably score profiles with
+different history lengths would need this feature normalized (e.g. months
+covered / months available) rather than used as a raw count, or would need
+separate scalers per history length. Out of scope to fix here; reported so
+the next task does not rediscover it the hard way.
+
+## Worked example: `demo_profile_lakshmi`, scored end to end
+
+The same thriving `street_food_vendor` from Y1/Y2's worked example, now run
+through the trained scorecard:
+
+    vitality_score: 100.0
+    band: strong_candidate
+    confidence: high
+
+**Strengths** (top 3, ranked by |contribution|):
+
+1. `ontime_bill_payment_rate` (contribution +0.729) — "Rent and utility bills
+   were paid on time 100% of the time."
+2. `months_would_cover_emi_of_last_24` (contribution +0.549) — "Income would
+   have covered an indicative loan payment in 24 of the last 24 months."
+3. `trend_last_6_months` (contribution +0.514) — "Income is up 19% versus
+   the same period a year earlier — growing."
+
+**Concerns:** none — every predictive feature reads favorably for this
+profile, so nothing survives the coherence filter on the concerns side. This
+is expected and correct, not a bug: "never pad with filler" applies here too.
+
+**Affordability:** indicative EMI range ₹8,990–₹13,607 (centered on the
+₹11,298 base figure — 20% of median monthly seen-window income — widened by
+half the profile's own income volatility, capped to a 10–40% margin);
+`months_would_cover_emi_of_last_24: 24`.
+
+This matches Y2's own worked example for the same profile (EMI ₹11,298 base,
+0 of 6 held-out months failed, label 0/no-default) end to end.
