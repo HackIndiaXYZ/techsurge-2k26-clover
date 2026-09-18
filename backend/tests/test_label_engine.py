@@ -109,10 +109,31 @@ class TestUnlabelableProfiles(unittest.TestCase):
         profile = monthly_profile([10_000.0] * 5)
         self.assertIsNone(derive_label(profile, EMI))
 
-    def test_profile_with_an_empty_holdout_list_cannot_be_labeled(self):
+    def test_a_business_that_stopped_trading_is_a_default_not_unlabelable(self):
+        """An empty held-out window is the most severe default there is.
+
+        The window still exists -- the business simply recorded nothing in it.
+        Treating that as "unlabelable" would silently drop the worst cases from
+        validation and bias the measured default rate downward.
+        """
         profile = profile_with([COVERED] * 6)
         profile.transactions_holdout = []
-        self.assertIsNone(derive_label(profile, EMI))
+
+        result = derive_label(profile, EMI)
+        assert result is not None
+        self.assertEqual(result.months_failed, 6)
+        self.assertEqual(result.months_evaluated, 6)
+        self.assertEqual(result.label, 1)
+
+    def test_profile_with_no_measurable_seen_income_is_unlabelable(self):
+        """An EMI of zero cannot test repayment capacity.
+
+        With no income across months 1-24 no lender would size an obligation,
+        and a zero EMI would collapse the coverage test into `income >= 0`,
+        labelling a dead business as certain to repay.
+        """
+        profile = profile_with([COVERED] * 6)
+        self.assertIsNone(derive_label(profile, 0.0))
 
 
 class TestShortfallReporting(unittest.TestCase):

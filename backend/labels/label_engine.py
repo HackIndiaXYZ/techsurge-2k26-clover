@@ -82,9 +82,19 @@ def derive_label(profile: Profile, indicative_emi: float) -> Optional[LabelResul
     if window is None:
         return None
 
-    transactions = profile.transactions_holdout
-    if not transactions:
+    # A business with no measurable income across months 1-24 cannot be sized
+    # for an obligation at all, so there is nothing to test repayment capacity
+    # against. Labeling it 0 would be badly wrong: with an EMI of zero the
+    # coverage test degenerates to `income >= essentials`, and a dead business
+    # with neither would score as certain to repay.
+    if indicative_emi <= 0:
         return None
+
+    # NOTE: an empty holdout list is NOT unlabelable. A profile whose held-out
+    # window exists but contains no transactions is a business that stopped
+    # trading completely -- the most severe default there is. It must fall
+    # through and be scored as six failed months, not silently dropped.
+    transactions = profile.transactions_holdout
 
     # Leakage tripwire: every transaction must sit inside months 25-30.
     assert_within_window(transactions, window, caller="label_engine.derive_label")
