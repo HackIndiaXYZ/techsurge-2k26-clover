@@ -15,8 +15,10 @@ the API can never quietly report different numbers than what was validated.
 
 from __future__ import annotations
 
+import json
 from contextlib import asynccontextmanager
 from datetime import date
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +34,20 @@ from backend.contract.api_schema import (
 from backend.generator.schema import Archetype, HealthTier, Profile, ProfileMeta, SplitInfo
 from backend.model.artifact import ScorecardArtifact
 from backend.model.scorecard import analyze_profile
+
+DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+
+# Frontend-facing demo profile_id -> committed profile JSON file. This map is
+# what GET /api/profiles/{profile_id} exists to bridge (see that endpoint's
+# docstring for the full "why"): the frontend skeleton
+# (frontend/lib/services/clover_http_service.dart) hardcodes these 4 ids and
+# posts only {"profile_id": ...}, not Y1's full AnalyzeRequest shape.
+DEMO_PROFILES: dict[str, str] = {
+    "lakshmi_vendor_001": "demo_profile_lakshmi.json",
+    "thin_file_002": "sample_profile.json",
+    "dormancy_gap_003": "demo_profile_dormancy_gap.json",
+    "ramesh_carpentry_004": "demo_profile_ramesh_carpentry.json",
+}
 
 
 @asynccontextmanager
@@ -180,3 +196,52 @@ def get_portfolio(metrics: dict = Depends(get_metrics)) -> PortfolioResponse:
             ScoreHistogramBucket(**bucket) for bucket in metrics["score_histogram"]
         ],
     )
+
+
+@app.get("/api/profiles/{profile_id}", response_model=AnalyzeResponse)
+def get_profile_analysis(
+    profile_id: str, artifact: ScorecardArtifact = Depends(get_artifact)
+) -> AnalyzeResponse:
+    """Server-side demo-profile lookup: resolves a known profile_id to a
+    committed profile JSON file and scores it directly. NOT part of Y1's
+    original contract, and does not change /api/analyze's contract at all.
+
+    Why this exists: the frontend skeleton
+    (frontend/lib/services/clover_http_service.dart) posts only
+    {"profile_id": "..."} to /api/analyze, not Y1's full AnalyzeRequest
+    shape ({profile_id, transactions, months_available}). /api/analyze
+    implements that contract exactly, with no deviation, for every real
+    integration -- relaxing it to accept a bare profile_id would be exactly
+    the kind of contract drift this project has been careful to avoid
+    elsewhere. Instead, this is a separate, additional endpoint outside the
+    original contract that looks a known DEMO profile up server-side.
+
+    Because the committed profile JSON already carries a complete,
+    well-formed Profile (real meta/split/history dates from the generator,
+    not reconstructed from a flat transaction list), this calls
+    scorecard.analyze_profile() directly on it -- skipping /api/analyze's
+    own AnalyzeRequest-to-Profile conversion (_request_to_profile) entirely,
+    including its placeholder archetype/latent_health_tier, which aren't
+    needed here since the real values are already on the file.
+
+    Unknown ids return 404, not the 422 /api/analyze uses for malformed
+    input -- this is a lookup miss (the resource ~"/api/profiles/<id>"
+    doesn't exist), not a malformed request body.
+    """
+    filename = DEMO_PROFILES.get(profile_id)
+    if filename is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Unknown profile_id '{profile_id}'. Known demo ids: "
+                f"{sorted(DEMO_PROFILES)}"
+            ),
+        )
+
+    profile = Profile.model_validate(json.loads((DATA_DIR / filename).read_text()))
+    # Return the id the caller asked for, not whatever internal id the
+    # committed file happens to carry (e.g. the file's own "demo_lakshmi"
+    # vs. the frontend-facing "lakshmi_vendor_001") -- the caller should see
+    # back the id it requested.
+    profile.meta.profile_id = profile_id
+    return analyze_profile(profile, artifact=artifact)

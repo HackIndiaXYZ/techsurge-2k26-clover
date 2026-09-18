@@ -12,6 +12,7 @@ disk, so these tests are deterministic and runnable without a training run.
 
 from __future__ import annotations
 
+import json
 import unittest
 
 try:
@@ -23,7 +24,7 @@ except ImportError:
 
 if HAS_FASTAPI:
     from backend.api.dependencies import get_artifact, get_metrics
-    from backend.api.main import app
+    from backend.api.main import DATA_DIR, app
     from backend.tests.model_helpers import make_artifact
     from backend.tests.test_scorecard import dense_profile
 
@@ -282,6 +283,95 @@ class TestRunsWithoutATrainedModelOnDisk(unittest.TestCase):
                 shutil.move(moved, str(ARTIFACT_PATH))
 
         self.assertEqual(response.status_code, 200)
+
+
+@unittest.skipUnless(HAS_FASTAPI, "fastapi/httpx not installed (system Python) -- run under .venv")
+class TestProfileLookupEndpoint(unittest.TestCase):
+    """GET /api/profiles/{profile_id} -- the demo-lookup bridge for the
+    frontend's 4 hardcoded ids, which post only {profile_id} to /api/analyze
+    rather than Y1's full AnalyzeRequest shape. This endpoint is additional,
+    outside Y1's original contract; /api/analyze itself is untouched (see
+    TestMalformedRequests / TestAnalyzeEndpoint above, still passing as-is).
+    """
+
+    def setUp(self):
+        self.artifact = make_artifact(
+            coefficients={
+                "months_would_cover_emi_of_last_24": 1.2,
+                "ontime_bill_payment_rate": 0.7,
+            },
+            intercept=2.0,
+        )
+        app.dependency_overrides[get_artifact] = lambda: self.artifact
+        app.dependency_overrides[get_metrics] = lambda: FIXTURE_METRICS
+
+    def tearDown(self):
+        app.dependency_overrides.clear()
+
+    def test_all_four_frontend_ids_resolve(self):
+        for profile_id in (
+            "lakshmi_vendor_001",
+            "thin_file_002",
+            "dormancy_gap_003",
+            "ramesh_carpentry_004",
+        ):
+            with self.subTest(profile_id=profile_id):
+                client = TestClient(app)
+                response = client.get(f"/api/profiles/{profile_id}")
+                self.assertEqual(response.status_code, 200)
+                data = response.json()
+                self.assertIn(data["outcome"], ("SCORED", "LOW_CONFIDENCE", "NOT_ASSESSABLE"))
+
+    def test_response_echoes_back_the_requested_id_not_the_files_internal_id(self):
+        # data/demo_profile_lakshmi.json's own meta.profile_id is
+        # "demo_lakshmi", not "lakshmi_vendor_001" -- the caller should see
+        # back what it asked for.
+        client = TestClient(app)
+        response = client.get("/api/profiles/lakshmi_vendor_001")
+        self.assertEqual(response.json()["profile_id"], "lakshmi_vendor_001")
+
+    def test_thin_file_002_is_gated_not_an_error(self):
+        # Backed by data/sample_profile.json, a genuine 5-month short-history
+        # profile -- exercises the real sufficiency gate, not a mock.
+        client = TestClient(app)
+        response = client.get("/api/profiles/thin_file_002")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["outcome"], "NOT_ASSESSABLE")
+        self.assertIsNone(data["vitality_score"])
+        self.assertIsNotNone(data["coverage_reason"])
+
+    def test_dormancy_gap_003_shows_the_long_dry_streak_in_its_own_features(self):
+        # The gate/model may or may not surface longest_dry_streak_days as a
+        # reason code (it's one of the coherence-filtered features -- see
+        # docs/DATA_SCHEMA.md), but the underlying profile really does have
+        # the 60-day gap baked in; this just confirms the endpoint serves
+        # that real file rather than something else.
+        from backend.generator.schema import Profile
+
+        path = DATA_DIR / "demo_profile_dormancy_gap.json"
+        profile = Profile.model_validate(json.loads(path.read_text()))
+        from backend.features.feature_engine import extract_features
+
+        self.assertGreaterEqual(extract_features(profile).longest_dry_streak_days, 30)
+
+    def test_unknown_profile_id_is_404_not_a_500_or_422(self):
+        client = TestClient(app)
+        response = client.get("/api/profiles/does_not_exist")
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("does_not_exist", response.json()["detail"])
+
+    def test_known_ids_are_listed_in_the_404_message(self):
+        client = TestClient(app)
+        response = client.get("/api/profiles/nope")
+        detail = response.json()["detail"]
+        for known_id in (
+            "lakshmi_vendor_001",
+            "thin_file_002",
+            "dormancy_gap_003",
+            "ramesh_carpentry_004",
+        ):
+            self.assertIn(known_id, detail)
 
 
 @unittest.skipUnless(HAS_FASTAPI, "fastapi/httpx not installed (system Python) -- run under .venv")

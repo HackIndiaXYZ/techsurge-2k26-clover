@@ -154,24 +154,70 @@ curl -s http://localhost:8000/api/portfolio
 }
 ```
 
+## `GET /api/profiles/{profile_id}`
+
+**Not part of Y1's original contract, and does not change `/api/analyze`'s
+contract at all.** Added specifically to bridge a request-shape gap: the
+frontend skeleton (`frontend/lib/services/clover_http_service.dart`) POSTs
+only `{"profile_id": "..."}` to `/api/analyze`, not the full `AnalyzeRequest`
+shape (`transactions`/`months_available`) Y1's contract requires. Rather than
+relaxing `/api/analyze` for every real integration, this is a separate
+endpoint that looks a known **demo** profile up server-side by id and scores
+it directly. Response shape is `AnalyzeResponse`, same as `/api/analyze`.
+
+The frontend's 4 hardcoded demo ids (`frontend/lib/services/
+clover_http_service.dart::getAvailableProfileIds`) now all resolve:
+
+| Frontend id | Backed by | Story |
+|---|---|---|
+| `lakshmi_vendor_001` | `data/demo_profile_lakshmi.json` | thriving street food vendor (Y1's original demo profile) |
+| `thin_file_002` | `data/sample_profile.json` | genuine 5-month short-history profile — exercises the real sufficiency gate |
+| `dormancy_gap_003` | `data/demo_profile_dormancy_gap.json` | failing kirana store with a hand-carved 60-day dormancy gap in the middle of its history |
+| `ramesh_carpentry_004` | `data/demo_profile_ramesh_carpentry.json` | stable small trade business. **No dedicated "carpentry" archetype exists in the generator** — `tailor_salon` (a materials-plus-service small trade) is used as the closest available fit, documented in `generate_dataset.py::build_demo_profile_ramesh_carpentry` and `docs/DATA_SCHEMA.md`, not a silent substitution. |
+
+```bash
+curl -s http://localhost:8000/api/profiles/lakshmi_vendor_001
+```
+
+```json
+{"profile_id": "lakshmi_vendor_001", "outcome": "SCORED", "vitality_score": 91.0, "band": "strong_candidate", "..." : "..."}
+```
+
+```bash
+curl -s http://localhost:8000/api/profiles/dormancy_gap_003
+```
+
+```json
+{"profile_id": "dormancy_gap_003", "outcome": "SCORED", "vitality_score": 15.0, "band": "manual_review", "..." : "..."}
+```
+
+Note `profile_id` in the response is the id you asked for, not whatever
+internal id the underlying committed file happens to carry (e.g. the file's
+own `"demo_lakshmi"`).
+
+An unknown id returns **404** (a lookup miss, distinct from `/api/analyze`'s
+422 for a malformed body):
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/api/profiles/does_not_exist
+# 404
+```
+
 ## Known integration gap — read before wiring up a frontend
 
-**The frontend skeleton (`frontend/lib/services/clover_http_service.dart`, PR
-#5) currently POSTs only `{"profile_id": "..."}` to `/api/analyze`** — it does
-not send `transactions`/`months_available`. That does not match Y1's
-`AnalyzeRequest` contract, which this server implements exactly (no
-deviation, per this task's instructions), so as written today the frontend's
-live-API call path will get a 422 from this real server, not a working
-response. This is a frontend integration gap for a follow-up task, not
-something fixed here — fixing it either means the frontend needs to send the
-full transaction list, or a future task needs to add a separate
-profile-lookup-by-id endpoint outside Y1's contract. Flagging it now so it
-isn't a surprise mid-demo.
+**Fixed by the endpoint above, but requires a frontend-side change to take
+effect.** The frontend skeleton currently calls `POST /api/analyze` with
+`{"profile_id": "..."}` only, which will still 422 against this server's
+`/api/analyze` (that contract is unchanged, deliberately). The frontend
+needs to switch its demo-profile lookup path to `GET /api/profiles/{id}`
+instead — its own code already anticipates this
+(`clover_http_service.dart`'s comment: "When live backend is wired up, can
+fetch from /api/profiles or keep known sample list"). Flagging this so it
+isn't a surprise mid-demo; not making that frontend change here.
 
 **Separately, the mock score does not match the real one.** The frontend's
 mock data (`frontend/lib/mock_backend.dart`) uses `vitality_score: 71.5` for
-its Lakshmi placeholder (`profile_id: "lakshmi_vendor_001"`, also a different
-id than this repo's real `demo_lakshmi`). The real trained model scores the
-real Lakshmi profile at **91.0**. This is expected — the mock predates the
-real model — but the two numbers will visibly disagree until the frontend
-integration task switches it over to this live API.
+its Lakshmi placeholder. The real trained model scores the real Lakshmi
+profile at **91.0**. This is expected — the mock predates the real model —
+but the two numbers will visibly disagree until the frontend integration
+task switches it over to this live API.
