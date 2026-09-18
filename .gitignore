@@ -150,6 +150,13 @@ vite.config.ts.timestamp-*
 #   python3 -m backend.scripts.build_feature_table
 /data/labels_holdout.csv
 
+# Trained model artifact (regenerate with backend/model/train_scorecard.py).
+# metrics.json is the one file in this directory that IS committed -- it is
+# the small, human-readable evidence of how the last committed model
+# actually performed, and is excluded from the blanket ignore below.
+/backend/model/artifacts/*
+!/backend/model/artifacts/metrics.json
+
 # Python
 __pycache__/
 *.pyc
