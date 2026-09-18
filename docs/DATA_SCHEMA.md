@@ -276,6 +276,20 @@ to a normalised least-squares slope, which *is* seasonality-exposed; that
 fallback affects only short-history profiles, which are already gated to
 `LOW_CONFIDENCE` or `NOT_ASSESSABLE`.
 
+### The flagship is a count, and must be normalized before comparing
+
+`months_would_cover_emi_of_last_24` is an **absolute count**, because the API
+contract fixes it as an `int`. It is therefore bounded by how much history a
+profile has: a business that covered the EMI in **all 11 of its 11 months**
+scores 11, which sits below a 24-month business that missed four.
+
+Ranking profiles on the raw count would penalize a thin file for being thin —
+the exact exclusion this project exists to undo. Downstream scoring must
+either compare only within the `FULL` cohort (all of which have the same
+24-month window) or divide by the window length. The denominator travels with
+the feature in the feature table as `sufficiency_months_available`, so the rate
+is recoverable without adding a thirteenth feature.
+
 ### Noise and reversals
 
 Every money calculation excludes the generator's `batch_settlement` and
@@ -283,6 +297,16 @@ Every money calculation excludes the generator's `batch_settlement` and
 register as a week of trading or inflate a ratio. `upi_reversal` is **not**
 excluded — a reversal is a real correction, and is netted off the transaction
 it reverses (a reversed customer inflow nets business income back to zero).
+
+Because that netting only works when both halves are present, the generator
+guarantees a reversal is never separated from its original. A reversal
+normally lands on the same day or the next day, but falls back to the same day
+whenever the later date would run past the end of the history, land inside a
+data gap, or **cross the seen/held-out split** — which would otherwise strand
+a correction to seen-window activity on the held-out side of the boundary and
+depress the first held-out month's income. Gap windows are likewise decided
+before noise is injected, so noise never refills a gap and a gap never removes
+one half of a pair.
 
 ### Nulls are deliberate
 
@@ -389,16 +413,30 @@ The same EMI definition drives the flagship
 of 25–30, so the feature and the label measure the same thing at two different
 points in time.
 
-**Short-history profiles cannot be labeled.** With no held-out window there is
-nothing to label, so `derive_label` returns `None` and those 15 profiles are
-excluded from validation rather than guessed at.
+### Two edge cases worth stating explicitly
+
+**A business that stopped trading entirely is a default, not an absence.** If
+the held-out window exists but contains no transactions at all, that is the
+most severe default there is — six months of zero income against a live
+obligation. It is labeled 1. Treating an empty window as "unlabelable" would
+silently drop the worst cases from validation and bias the measured default
+rate downward.
+
+**A business with no measurable income in months 1–24 is unlabelable.** The
+indicative EMI would be zero, and the coverage test would collapse into
+`income ≥ essentials` — labeling a dead business as certain to repay. No lender
+would size an obligation against no income, so `derive_label` returns `None`.
+
+**Short-history profiles cannot be labeled** either: with no held-out window
+there is nothing to label, so those 15 profiles are excluded from validation
+rather than guessed at.
 
 ### Label distribution
 
 | | Count | Share |
 |---|---|---|
-| No default (0) | 458 | 90.5% |
-| Default (1) | 48 | 9.5% |
+| No default (0) | 456 | 90.1% |
+| Default (1) | 50 | 9.9% |
 | Unlabelable | 15 | — |
 
 The label was never shown the latent health tier, but recovers it cleanly,
@@ -406,12 +444,12 @@ which is the main evidence that it measures something real:
 
 | Latent tier | n | Default rate |
 |---|---|---|
-| thriving | 181 | 0.0% |
+| thriving | 181 | 0.6% |
 | stable | 165 | 1.2% |
-| struggling | 93 | 12.9% |
+| struggling | 93 | 14.0% |
 | failing | 67 | 50.7% |
 
-The classes are imbalanced (9.5% positive), which is realistic for a lending
+The classes are imbalanced (9.9% positive), which is realistic for a lending
 portfolio but means the modeling stage should use stratified splits and rank
 metrics such as AUC rather than accuracy.
 
@@ -467,20 +505,20 @@ A `thriving` `street_food_vendor` with 24 months of seen history.
 |---|---|---|---|
 | Regularity | `pct_weeks_with_income` | 1.00 | Earned in every single week of the window. |
 | | `income_coefficient_of_variation` | 0.41 | Variable, but that is the festival/monsoon cycle, not instability. |
-| | `longest_dry_streak_days` | 5 | Longest silence is one short data gap. |
-| Growth | `trend_last_6_months` | +0.17 | 17% up on the same 6 months a year earlier. |
-| | `year_over_year_change` | +0.18 | 18% up year on year — consistent with the above. |
+| | `longest_dry_streak_days` | 6 | Longest silence is one short data gap. |
+| Growth | `trend_last_6_months` | +0.19 | 19% up on the same 6 months a year earlier. |
+| | `year_over_year_change` | +0.19 | 19% up year on year — consistent with the above. |
 | Discipline | `expense_to_income_ratio` | 0.37 | Keeps ~63 paise of every rupee earned. |
 | | `ontime_bill_payment_rate` | 1.00 | Every rent and utility bill paid by the 7th. |
-| Resilience | `cash_buffer_days` | 46.7 | Typical monthly surplus covers ~47 days of running costs. |
-| | `worst_monthly_dip_pct` | 0.47 | Worst month ran 47% below typical — the monsoon. |
-| Affordability | `months_would_cover_emi_of_last_24` | **24** | Could have serviced the EMI in all 24 months. |
+| Resilience | `cash_buffer_days` | 46.0 | Typical monthly surplus covers ~46 days of running costs. |
+| | `worst_monthly_dip_pct` | 0.50 | Worst month ran 50% below typical — the monsoon. |
+| Affordability | `months_would_cover_emi_of_last_24` | **24** | Could have serviced the EMI in all 24 of its 24 months. |
 | Trail | `digital_share` | 0.86 | Mostly digital — informational only. |
 | | `cash_share` | 0.14 | |
 
-**Sufficiency:** `FULL` — 24 months of history at 244.2 transactions/month.
+**Sufficiency:** `FULL` — 24 months of history at 244.0 transactions/month.
 
-**Held-out check (not a feature):** indicative EMI ₹11,044; 0 of the 6 held-out
+**Held-out check (not a feature):** indicative EMI ₹11,298; 0 of the 6 held-out
 months fell short, so the label is **0 (no default)** — which is what the
 feature profile above would lead you to expect.
 
