@@ -22,12 +22,7 @@ void main() {
   final CloverApiService service =
       _useMock ? MockBackend() : _buildHttpService();
 
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppState(service),
-      child: CloverApp(service: service),
-    ),
-  );
+  runApp(CloverApp(service: service));
 }
 
 CloverApiService _buildHttpService() {
@@ -45,11 +40,14 @@ class CloverApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Clover — Alternative Credit Signal',
-      debugShowCheckedModeBanner: false,
-      theme: _buildTheme(),
-      home: CloverShell(service: service),
+    return ChangeNotifierProvider(
+      create: (_) => AppState(service),
+      child: MaterialApp(
+        title: 'Clover — Alternative Credit Signal',
+        debugShowCheckedModeBanner: false,
+        theme: _buildTheme(),
+        home: CloverShell(service: service),
+      ),
     );
   }
 
