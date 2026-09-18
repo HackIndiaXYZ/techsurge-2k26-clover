@@ -7,6 +7,17 @@ This is the ONLY function a future FastAPI /api/analyze handler needs to call.
 It reuses `backend.contract.api_schema`'s Pydantic models directly rather than
 redefining them, so the response is guaranteed to match the contract Y1 wrote.
 
+Note on the request side: `analyze_profile` takes a full
+`backend.generator.schema.Profile`, not Y1's `AnalyzeRequest`. `AnalyzeRequest`
+carries `{profile_id, transactions, months_available}` -- it has no
+archetype/split/history-date metadata, but `assess_sufficiency` and
+`extract_features` both key off `profile.meta.split` and
+`profile.meta.history_start_date` to know the seen-window boundary. Building a
+full `Profile` (or an equivalent `ProfileMeta`) out of an `AnalyzeRequest` is
+the future FastAPI handler's job, not this module's -- reconstructing that
+metadata from a flat transaction list plus `months_available` is a real design
+question for that task, not a rubber stamp.
+
 Gate-first, same as Y2 always intended
 ---------------------------------------
 `assess_sufficiency` runs before anything else. A profile that is not FULL
@@ -53,7 +64,12 @@ from backend.contract.api_schema import (
 from backend.features.feature_engine import extract_features
 from backend.features.sufficiency import SufficiencyOutcome, assess_sufficiency
 from backend.generator.schema import Profile
-from backend.model.artifact import ARTIFACT_PATH, ScorecardArtifact, predict_default_probability
+from backend.model.artifact import (
+    ARTIFACT_PATH,
+    ScorecardArtifact,
+    predict_default_probability,
+    vitality_score_from_default_probability,
+)
 from backend.model.reason_codes import rank_reason_codes
 
 # The indicative EMI range widens with the business's own income volatility
@@ -156,7 +172,7 @@ def analyze_profile(
 
     artifact = artifact or _load_artifact()
     p_default = predict_default_probability(artifact, feature_values)
-    vitality_score = max(0, min(100, round(100 * (1 - p_default))))
+    vitality_score = vitality_score_from_default_probability(p_default)
     band = Band(artifact.band_cutoffs.band_for(p_default))
 
     strengths, concerns = rank_reason_codes(artifact, feature_values)

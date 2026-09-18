@@ -33,6 +33,7 @@ from __future__ import annotations
 import csv
 import json
 import random
+from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 
@@ -46,6 +47,7 @@ from backend.model.artifact import (
     ScorecardArtifact,
     now_iso,
     predict_default_probability,
+    vitality_score_from_default_probability,
 )
 from backend.model.reason_codes import rank_reason_codes
 
@@ -133,51 +135,55 @@ def compute_coverage(feature_table: dict[str, dict]) -> dict:
     }
 
 
-def compute_score_histogram(
+@dataclass
+class PortfolioMetrics:
+    """Everything computable in a single pass over the FULL cohort.
+
+    score_histogram, band_distribution and reason_code_frequency were
+    previously three independent O(n) passes over the same rows, each
+    re-deriving feature_values_from_row and re-scoring the profile. One pass
+    computes all three, since they need exactly the same per-row work.
+    """
+
+    scores: list[float]
+    histogram: list[dict]
+    band_distribution: dict[str, int]
+    reason_code_frequency: dict[str, int]
+
+
+def compute_portfolio_metrics(
     artifact: ScorecardArtifact, feature_table: dict[str, dict]
-) -> tuple[list[dict], list[float]]:
+) -> PortfolioMetrics:
     scores: list[float] = []
+    band_distribution = {"strong_candidate": 0, "manual_review": 0, "high_risk_referral": 0}
+    reason_code_frequency = {name: 0 for name in PREDICTIVE_FEATURES}
+
     for row in feature_table.values():
         if row["sufficiency_outcome"] != "FULL":
             continue
         fv = feature_values_from_row(row)
         p_default = predict_default_probability(artifact, fv)
-        scores.append(max(0, min(100, round(100 * (1 - p_default)))))
 
-    buckets = []
+        scores.append(vitality_score_from_default_probability(p_default))
+        band_distribution[artifact.band_cutoffs.band_for(p_default)] += 1
+
+        strengths, concerns = rank_reason_codes(artifact, fv)
+        for r in strengths + concerns:
+            reason_code_frequency[r.feature] += 1
+
+    histogram = []
     for low in range(0, 100, HISTOGRAM_BUCKET_WIDTH):
         high = low + HISTOGRAM_BUCKET_WIDTH
         label = f"{low}-{high}"
         count = sum(1 for s in scores if low <= s < high or (high == 100 and s == 100))
-        buckets.append({"bucket": label, "count": count})
-    return buckets, scores
+        histogram.append({"bucket": label, "count": count})
 
-
-def compute_band_distribution(
-    artifact: ScorecardArtifact, feature_table: dict[str, dict]
-) -> dict[str, int]:
-    counts = {"strong_candidate": 0, "manual_review": 0, "high_risk_referral": 0}
-    for row in feature_table.values():
-        if row["sufficiency_outcome"] != "FULL":
-            continue
-        fv = feature_values_from_row(row)
-        p_default = predict_default_probability(artifact, fv)
-        counts[artifact.band_cutoffs.band_for(p_default)] += 1
-    return counts
-
-
-def compute_reason_code_frequency(
-    artifact: ScorecardArtifact, feature_table: dict[str, dict]
-) -> dict[str, int]:
-    freq = {name: 0 for name in PREDICTIVE_FEATURES}
-    for row in feature_table.values():
-        if row["sufficiency_outcome"] != "FULL":
-            continue
-        fv = feature_values_from_row(row)
-        strengths, concerns = rank_reason_codes(artifact, fv)
-        for r in strengths + concerns:
-            freq[r.feature] += 1
-    return freq
+    return PortfolioMetrics(
+        scores=scores,
+        histogram=histogram,
+        band_distribution=band_distribution,
+        reason_code_frequency=reason_code_frequency,
+    )
 
 
 def _find_profile_json(profile_id: str) -> Path | None:
@@ -245,12 +251,12 @@ def run_stability_check(artifact: ScorecardArtifact) -> dict:
 
         fv_24 = extract_features(profile).as_dict()
         p_default_24 = predict_default_probability(artifact, fv_24)
-        score_24 = max(0, min(100, round(100 * (1 - p_default_24))))
+        score_24 = vitality_score_from_default_probability(p_default_24)
 
         truncated = truncate_seen_window(profile, STABILITY_CHECK_MONTHS)
         fv_12 = extract_features(truncated).as_dict()
         p_default_12 = predict_default_probability(artifact, fv_12)
-        score_12 = max(0, min(100, round(100 * (1 - p_default_12))))
+        score_12 = vitality_score_from_default_probability(p_default_12)
 
         results.append(
             {
@@ -300,7 +306,11 @@ def main() -> None:
     coverage = compute_coverage(feature_table)
     print(f"\nCoverage across {coverage['n_profiles']} profiles: {coverage['pct']}")
 
-    histogram, all_scores = compute_score_histogram(artifact, feature_table)
+    portfolio = compute_portfolio_metrics(artifact, feature_table)
+    histogram = portfolio.histogram
+    band_distribution = portfolio.band_distribution
+    reason_code_frequency = portfolio.reason_code_frequency
+
     print("\nScore histogram (all FULL profiles):")
     max_count = max(b["count"] for b in histogram) if histogram else 0
     total_scored = sum(b["count"] for b in histogram)
@@ -314,10 +324,8 @@ def main() -> None:
         print(f"  Shape looks spread, not a single dominant spike "
               f"(largest bucket is {100 * max_count / total_scored:.0f}% of {total_scored}).")
 
-    band_distribution = compute_band_distribution(artifact, feature_table)
     print(f"\nBand distribution (all FULL profiles): {band_distribution}")
 
-    reason_code_frequency = compute_reason_code_frequency(artifact, feature_table)
     print("\nReason-code appearance frequency across all FULL profiles "
           "(coherence-filtered -- see reason_codes.py):")
     for name, count in sorted(reason_code_frequency.items(), key=lambda kv: -kv[1]):

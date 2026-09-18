@@ -198,6 +198,17 @@ def predict_default_probability(
     return 1.0 - predict_vitality_probability(artifact, feature_values)
 
 
+def vitality_score_from_default_probability(p_default: float) -> int:
+    """vitality_score = round(100 * (1 - p_default)), clipped to [0, 100].
+
+    The one place this formula is written. scorecard.py and validate.py both
+    call this rather than each re-deriving it, so a future edit to the
+    rounding/clipping rule cannot update one call site and silently miss
+    another.
+    """
+    return max(0, min(100, round(100 * (1 - p_default))))
+
+
 def compute_contributions(
     artifact: ScorecardArtifact, feature_values: dict[str, Optional[float]]
 ) -> dict[str, float]:

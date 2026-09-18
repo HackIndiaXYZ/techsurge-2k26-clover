@@ -304,9 +304,24 @@ def main() -> None:
     scaler_mean = dict(zip(PREDICTIVE_FEATURES, scaler.mean_.tolist()))
     scaler_scale = dict(zip(PREDICTIVE_FEATURES, scaler.scale_.tolist()))
 
+    from backend.model.reason_codes import TEMPLATES
+
     print("\nCoefficients (vitality-target model; positive = helps the business):")
+    flipped_signs = []
     for name, coef in sorted(coefficients.items(), key=lambda kv: -abs(kv[1])):
-        print(f"  {name:36s} {coef:+.4f}")
+        expected_positive = TEMPLATES[name].higher_is_better
+        flipped = (coef >= 0) != expected_positive
+        flag = "  <- counter-intuitive sign, see docs/DATA_SCHEMA.md" if flipped else ""
+        print(f"  {name:36s} {coef:+.4f}{flag}")
+        if flipped:
+            flipped_signs.append(name)
+    if flipped_signs:
+        print(f"\n{len(flipped_signs)} feature(s) fit with a sign that disagrees with "
+              f"reason_codes.py's domain expectation ({', '.join(flipped_signs)}) -- "
+              "this is diagnosed, not treated as a bug, in docs/DATA_SCHEMA.md "
+              "('A real finding: counter-intuitive signs'). reason_codes.py's "
+              "coherence filter (is_favorable) prevents these from ever producing "
+              "a backwards-reading reason code regardless.")
 
     artifact = ScorecardArtifact(
         trained_at=now_iso(),

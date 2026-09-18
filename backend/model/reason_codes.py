@@ -78,7 +78,7 @@ class ReasonTemplate:
     positive: Formatter
     negative: Formatter
     is_favorable: FavorabilityCheck
-    higher_is_better: bool  # diagnostic use only (train_scorecard.py sign check)
+    higher_is_better: bool  # read by train_scorecard.py's sign-coherence diagnostic
 
 
 def _pct(value: float) -> float:
@@ -104,6 +104,13 @@ TEMPLATES: dict[str, ReasonTemplate] = {
         is_favorable=lambda v: v <= 14,
         higher_is_better=False,
     ),
+    # trend_last_6_months / year_over_year_change: positive()'s v<0 branch and
+    # negative()'s v>=0 branch are unreachable via rank_reason_codes (it only
+    # calls positive() when is_favorable(v), i.e. v>=0, and negative() only
+    # when not is_favorable(v), i.e. v<0). Kept anyway because TEMPLATES is a
+    # public dict these tests (and any future caller) can call directly,
+    # bypassing that gate -- rendering "Income is up -5%" would be wrong, and
+    # the fallback wording is the fix, not a dead branch to delete.
     "trend_last_6_months": ReasonTemplate(
         positive=lambda v: (
             f"Income is up {_pct(v):.0f}% versus the same period a year earlier — growing."
