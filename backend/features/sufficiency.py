@@ -33,9 +33,12 @@ from backend.generator.schema import Profile
 #   regime, so it is the shortest window from which a trend means anything.
 #
 # Why 12 months for full confidence?
-#   Twelve months closes a full seasonal cycle, so every month is compared
-#   against its own counterpart rather than against a different season. Below
-#   that, growth and volatility features are still measurable but are partly
+#   A full seasonal cycle takes twelve months, so full confidence needs more
+#   than twelve months of history: at exactly twelve the window closes the
+#   cycle but leaves nothing to compare it against, so no month can yet be
+#   read against its own counterpart a year earlier. Twelve months and under
+#   is therefore LOW_CONFIDENCE, and FULL begins above it. Below the cycle,
+#   growth and volatility features are still measurable but are partly
 #   reporting where in the year the window happened to fall -- hence "low
 #   confidence" rather than "not assessable".
 MIN_MONTHS_ASSESSABLE = 6
@@ -114,8 +117,9 @@ def assess_sufficiency(profile: Profile) -> SufficiencyResult:
         reasons = []
         if short_history:
             reasons.append(
-                f"{months} months of history is under the {MIN_MONTHS_FULL_CONFIDENCE}-month "
-                "full seasonal cycle"
+                f"{months} months of history does not clear a full "
+                f"{MIN_MONTHS_FULL_CONFIDENCE}-month seasonal cycle with a prior "
+                "year to compare against"
             )
         if sparse_trail:
             reasons.append(

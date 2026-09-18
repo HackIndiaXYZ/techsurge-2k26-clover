@@ -183,7 +183,9 @@ class TestFairnessTripwireAtRuntime(unittest.TestCase):
         identical cashflow and different channel mixes must reach the same
         sufficiency outcome and the same affordability result.
         """
-        from backend.features.sufficiency import assess_sufficiency
+        from datetime import timedelta
+
+        from backend.features.sufficiency import SufficiencyOutcome, assess_sufficiency
         from backend.generator.schema import Channel
         from backend.tests.helpers import income_tx, make_profile, rent_tx, add_months, SEEN_START
 
@@ -191,17 +193,26 @@ class TestFairnessTripwireAtRuntime(unittest.TestCase):
             seen = []
             for i in range(24):
                 month = add_months(SEEN_START, i)
-                for day in (5, 12, 19, 26):
-                    seen.append(income_tx(month.replace(day=day), 5_000.0, channel=channel))
-                seen.append(rent_tx(month.replace(day=3), 2_000.0))
-            return make_profile(seen, [], split_date=None, end=add_months(SEEN_START, 24))
+                # 20 trading days a month clears the density bar comfortably,
+                # so both profiles reach FULL and the comparison below is a
+                # real test rather than two identical refusals.
+                for day in range(1, 21):
+                    seen.append(income_tx(month.replace(day=day), 1_000.0, channel=channel))
+                seen.append(rent_tx(month.replace(day=25), 2_000.0))
+            # End on the last day of the 24th month, not the 1st of the 25th.
+            end = add_months(SEEN_START, 24) - timedelta(days=1)
+            return make_profile(seen, [], split_date=None, end=end)
 
         digital = build(Channel.UPI)
         cash = build(Channel.CASH)
 
-        self.assertEqual(
-            assess_sufficiency(digital).outcome, assess_sufficiency(cash).outcome
-        )
+        digital_gate = assess_sufficiency(digital)
+        cash_gate = assess_sufficiency(cash)
+
+        # Both must actually be assessable -- otherwise this test would pass
+        # even if the gate did penalise cash.
+        self.assertEqual(digital_gate.outcome, SufficiencyOutcome.FULL)
+        self.assertEqual(cash_gate.outcome, SufficiencyOutcome.FULL)
         digital_features = extract_features(digital)
         cash_features = extract_features(cash)
         self.assertEqual(

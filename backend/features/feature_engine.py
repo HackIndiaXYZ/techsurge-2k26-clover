@@ -26,7 +26,6 @@ from typing import Optional
 
 from backend.common.cashflow import (
     BILL_ON_TIME_DAY_OF_MONTH,
-    ESSENTIAL_COUNTERPARTIES,
     indicative_emi,
     is_noise,
     monthly_business_income,
@@ -201,6 +200,20 @@ def _months_would_cover_emi(
     (20% of median monthly income, `cashflow.indicative_emi`) but evaluates it
     over months 1-24 instead of the held-out window, so the feature and the
     label measure the same thing at two different points in time.
+
+    WARNING -- this is an ABSOLUTE COUNT, not a rate, because the API contract
+    fixes it as `months_would_cover_emi_of_last_24: int`. It is therefore
+    bounded by how much history a profile has: a business that covered the EMI
+    in all 11 of its 11 months scores 11, below a 24-month business that missed
+    four. Ranking profiles on the raw count would penalize a thin file for
+    being thin, which is the exact exclusion this project exists to undo.
+
+    Downstream scoring must either restrict comparisons to profiles the
+    sufficiency gate passed as FULL (all of which have the same 24-month
+    window), or normalize by the window length. The denominator is carried
+    alongside the feature in the feature table as
+    `sufficiency_months_available`, so the rate is always recoverable without
+    adding a thirteenth feature.
     """
     emi = indicative_emi(monthly_income)
     return months_covering_emi(monthly_income, monthly_essentials, emi)
@@ -396,9 +409,11 @@ def _cash_buffer_days(
 def _worst_monthly_dip_pct(monthly_income: dict[str, float]) -> Optional[float]:
     """How far the worst month fell below the typical month, as a fraction.
 
-    0.0 means the weakest month matched the median; 1.0 means a month with no
-    income at all. Measured against the median rather than the mean so a
-    single festival spike does not make every other month look like a dip.
+    0.0 means the weakest month matched the median and 1.0 means a month with
+    no income at all. Values above 1.0 are possible and meaningful: a month can
+    net negative when reversals exceed that month's inflows. Measured against
+    the median rather than the mean so a single festival spike does not make
+    every other month look like a dip.
     """
     values = list(monthly_income.values())
     if not values:

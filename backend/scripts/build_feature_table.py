@@ -80,9 +80,13 @@ def load_profiles(generated_dir: Path) -> list[Profile]:
     The committed samples are copies of profiles that also live in the
     generated directory (the demo profile, and one short-history sample), so
     loading both sources without de-duplication would double-count them.
+
+    The samples are resolved relative to the generated directory's parent
+    rather than hardcoded to the repo, so pointing --generated-dir at another
+    dataset does not silently mix in two profiles from this repo.
     """
     paths: list[Path] = sorted(generated_dir.glob("*.json"))
-    paths += [REPO_ROOT / "data" / name for name in COMMITTED_SAMPLES]
+    paths += [generated_dir.parent / name for name in COMMITTED_SAMPLES]
 
     by_id: dict[str, Profile] = {}
     duplicates = 0
