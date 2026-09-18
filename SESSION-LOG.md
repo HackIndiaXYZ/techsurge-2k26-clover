@@ -120,3 +120,36 @@ frontend/lib/
 - Reason-code "Weight" renders raw contributions as percentages (e.g. 768%) on
   dormancy_gap_003.
 - `pubspec.yaml` requires Dart ^3.13.3, i.e. Flutter >= 3.47.4.
+
+---
+
+## Session 4: Close out Session 3's open issues (same branch, PR #7)
+
+### Completed
+- `backend/scripts/build_feature_table.py`: `DEMO_FIXTURE_IDS` (`demo_thin_file`,
+  `demo_ramesh_carpentry`, `demo_dormancy_gap`) are skipped in `load_profiles`, so a
+  retrain from a fresh `generate_dataset` can no longer pull hand-tuned demo fixtures
+  into training. `demo_lakshmi` is deliberately NOT excluded: it is row 522 of the
+  committed feature table and the committed model was trained with it, so excluding
+  it would change `metrics.json` and Lakshmi's own score.
+  Verified: generate -> build_feature_table -> train -> validate gives a byte-identical
+  `feature_table.csv` (521 rows) and a `metrics.json` identical to the committed one
+  apart from the two run timestamps (not committed). New test
+  `TestDemoFixturesExcludedFromTraining`, which fails with the exclusion disabled.
+- `lender_screen.dart`: reason-code line showed `contribution * 100` as "Weight: N%".
+  `contribution` is an unbounded log-odds term (coefficient x z-score), not a fraction,
+  and the API only returns the top 3 per side, so it cannot be normalised to a share
+  client-side. Now shows the signed raw value, "Contribution: -7.68", matching the
+  backend docs' own wording.
+- Verified: backend 212 passed; `flutter analyze` 0 issues; `flutter test` 17/17; all 4
+  ids clicked through in Chrome against live uvicorn, no console errors at 1280x1000.
+  dormancy_gap_003 now reads +3.99 +0.42 +0.07 / -7.68 -1.75 -1.45 (was 399%...768%).
+
+### Decisions
+- dormancy_gap_003 and ramesh_carpentry_004 stay SCORED (demo narrative decision).
+  `MockBackend` still has them as NOT_ASSESSABLE / LOW_CONFIDENCE; this only matters
+  with `--dart-define=CLOVER_USE_MOCK=true`.
+
+### Noticed, not fixed
+- At a 1280x2000 viewport Flutter logs a transient "RenderFlex overflowed by 51 pixels"
+  from the AppBar actions slot (`main.dart` ~line 129). Not seen at 1280x1000.

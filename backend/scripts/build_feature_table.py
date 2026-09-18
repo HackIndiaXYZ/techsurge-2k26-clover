@@ -45,6 +45,10 @@ DEFAULT_LABEL_FILE = REPO_ROOT / "data" / "labels_holdout.csv"
 # Committed reference profiles, included alongside the bulk generated set.
 COMMITTED_SAMPLES = ("sample_profile.json", "demo_profile_lakshmi.json")
 
+# Hand-tuned demo fixtures, not population samples: never train on them.
+# demo_lakshmi is not listed -- the committed model was trained with it in.
+DEMO_FIXTURE_IDS = frozenset({"demo_thin_file", "demo_ramesh_carpentry", "demo_dormancy_gap"})
+
 FEATURE_TABLE_COLUMNS = (
     "profile_id",
     *FEATURE_NAMES,
@@ -94,6 +98,8 @@ def load_profiles(generated_dir: Path) -> list[Profile]:
         if not path.exists():
             continue
         profile = Profile.model_validate(json.loads(path.read_text()))
+        if profile.meta.profile_id in DEMO_FIXTURE_IDS:
+            continue
         if profile.meta.profile_id in by_id:
             duplicates += 1
             continue
