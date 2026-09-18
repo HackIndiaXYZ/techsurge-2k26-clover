@@ -1,4 +1,4 @@
-# Clover — Credit Invisible (TechSurge 2k26, PS-F02)
+# Credify — Credit Invisible (TechSurge 2k26, PS-F02)
 
 Clover is a research prototype for MSME credit scoring using alternative
 data — specifically simulated Account Aggregator (AA) transaction history —
