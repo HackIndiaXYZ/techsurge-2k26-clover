@@ -145,6 +145,11 @@ vite.config.ts.timestamp-*
 # Bulk synthetic dataset (regenerate with backend/generator/generate_dataset.py)
 /data/generated/
 
+# Held-out ground-truth labels. Validation only -- never a model input, and
+# never committed alongside the feature table. Regenerate with:
+#   python3 -m backend.scripts.build_feature_table
+/data/labels_holdout.csv
+
 # Python
 __pycache__/
 *.pyc
