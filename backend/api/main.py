@@ -21,7 +21,7 @@ from datetime import date
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api.dependencies import get_artifact, get_metrics, load_state
+from backend.api.dependencies import get_artifact, get_demo_profiles, get_metrics, load_state
 from backend.contract.api_schema import (
     AnalyzeRequest,
     AnalyzeResponse,
@@ -36,11 +36,11 @@ from backend.model.scorecard import analyze_profile
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Loads the trained model artifact and metrics.json ONCE, eagerly, before
-    # the server accepts any request. If the model hasn't been trained yet
-    # (backend/model/artifacts/scorecard_model.json missing), this raises and
-    # uvicorn fails to start with a clear message, rather than starting
-    # "successfully" and 500ing on the first real call.
+    # Loads the trained model artifact, metrics.json, and every demo profile
+    # ONCE, eagerly, before the server accepts any request. If the model
+    # hasn't been trained yet, or any file is missing/malformed, this raises
+    # and uvicorn fails to start with a clear message, rather than starting
+    # "successfully" and 500ing on whichever real call first hits it.
     load_state()
     yield
 
@@ -180,3 +180,58 @@ def get_portfolio(metrics: dict = Depends(get_metrics)) -> PortfolioResponse:
             ScoreHistogramBucket(**bucket) for bucket in metrics["score_histogram"]
         ],
     )
+
+
+@app.get("/api/profiles/{profile_id}", response_model=AnalyzeResponse)
+def get_profile_analysis(
+    profile_id: str,
+    artifact: ScorecardArtifact = Depends(get_artifact),
+    demo_profiles: dict[str, Profile] = Depends(get_demo_profiles),
+) -> AnalyzeResponse:
+    """Server-side demo-profile lookup: resolves a known profile_id to a
+    profile loaded ONCE at startup (dependencies.load_state) and scores it.
+    NOT part of Y1's original contract, and does not change /api/analyze's
+    contract at all.
+
+    Why this exists: the frontend skeleton
+    (frontend/lib/services/clover_http_service.dart) posts only
+    {"profile_id": "..."} to /api/analyze, not Y1's full AnalyzeRequest
+    shape ({profile_id, transactions, months_available}). /api/analyze
+    implements that contract exactly, with no deviation, for every real
+    integration -- relaxing it to accept a bare profile_id would be exactly
+    the kind of contract drift this project has been careful to avoid
+    elsewhere. Instead, this is a separate, additional endpoint outside the
+    original contract that looks a known DEMO profile up server-side.
+
+    The profile is served from `dependencies.get_demo_profiles()`'s startup
+    cache, not re-read/re-parsed/re-validated from disk on every request --
+    the same "load once, at startup" rule the model artifact and metrics.json
+    already follow, and for the same reason: this endpoint is used live in
+    the pitch, and a per-request file read (up to ~1.8MB, plus a full
+    pydantic validation) is exactly the avoidable latency that rule exists to
+    prevent. It also means a missing or malformed demo file fails `uvicorn`
+    startup immediately with a clear error, rather than surfacing as an
+    unhandled 500 on whichever request first happens to hit it.
+
+    Because the cached Profile already carries a complete, well-formed
+    Profile (real meta/split/history dates from the generator, not
+    reconstructed from a flat transaction list), this calls
+    scorecard.analyze_profile() directly on it -- skipping /api/analyze's
+    own AnalyzeRequest-to-Profile conversion (_request_to_profile) entirely,
+    including its placeholder archetype/latent_health_tier, which aren't
+    needed here since the real values are already on the file.
+
+    Unknown ids return 404, not the 422 /api/analyze uses for malformed
+    input -- this is a lookup miss (the resource ~"/api/profiles/<id>"
+    doesn't exist), not a malformed request body.
+    """
+    profile = demo_profiles.get(profile_id)
+    if profile is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Unknown profile_id '{profile_id}'. Known demo ids: "
+                f"{sorted(demo_profiles)}"
+            ),
+        )
+    return analyze_profile(profile, artifact=artifact)
