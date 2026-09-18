@@ -172,7 +172,7 @@ def analyze_profile(
 
     artifact = artifact or _load_artifact()
     p_default = predict_default_probability(artifact, feature_values)
-    vitality_score = vitality_score_from_default_probability(p_default)
+    vitality_score = vitality_score_from_default_probability(artifact, p_default)
     band = Band(artifact.band_cutoffs.band_for(p_default))
 
     strengths, concerns = rank_reason_codes(artifact, feature_values)

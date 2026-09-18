@@ -20,6 +20,7 @@ from backend.model.artifact import (
     predict_vitality_probability,
     sigmoid,
     standardize,
+    vitality_score_from_default_probability,
 )
 from backend.tests.model_helpers import make_artifact, neutral_feature_values
 
@@ -95,6 +96,7 @@ class TestPredictProbability(unittest.TestCase):
             band_cutoffs=base.band_cutoffs,
             train_profile_ids=base.train_profile_ids,
             test_profile_ids=base.test_profile_ids,
+            reference_default_probabilities=base.reference_default_probabilities,
         )
         values = {**neutral_feature_values(), "cash_buffer_days": 30.0}  # z = (30-20)/10 = 1.0
         p_vitality = predict_vitality_probability(artifact, values)
@@ -171,6 +173,85 @@ class TestBandCutoffs(unittest.TestCase):
         artifact = make_artifact(strong_candidate_max=0.1, high_risk_referral_min=0.5)
         self.assertEqual(artifact.band_cutoffs.band_for(0.0), "strong_candidate")
         self.assertEqual(artifact.band_cutoffs.band_for(1.0), "high_risk_referral")
+
+
+class TestVitalityScorePercentileRank(unittest.TestCase):
+    """vitality_score_from_default_probability: percentile rank against a
+    frozen reference distribution, inverted so 100 is safest.
+
+    This replaced a plain linear 100*(1-p_default) transform because that
+    transform crushed the vast majority of real profiles into the 90-100
+    bucket (measured: 83.8% of FULL profiles) -- see docs/DATA_SCHEMA.md.
+    """
+
+    def test_lowest_reference_value_scores_near_100(self):
+        # bisect_right counts the tied minimum itself as "at or below," so a
+        # value equal to the reference's own minimum ranks 1st of 101, not
+        # 0th -- score 99, not a perfect 100. Below every reference point
+        # (tested separately) is what actually scores a clean 100.
+        reference = tuple(i / 100 for i in range(101))  # 0.00 .. 1.00
+        artifact = make_artifact(reference_default_probabilities=reference)
+        score = vitality_score_from_default_probability(artifact, 0.0)
+        self.assertEqual(score, 99)
+
+    def test_highest_reference_value_scores_near_0(self):
+        reference = tuple(i / 100 for i in range(101))
+        artifact = make_artifact(reference_default_probabilities=reference)
+        score = vitality_score_from_default_probability(artifact, 1.0)
+        self.assertEqual(score, 0)
+
+    def test_median_reference_value_scores_near_50(self):
+        reference = tuple(i / 100 for i in range(101))
+        artifact = make_artifact(reference_default_probabilities=reference)
+        score = vitality_score_from_default_probability(artifact, 0.5)
+        self.assertAlmostEqual(score, 50, delta=2)
+
+    def test_a_value_below_every_reference_point_still_scores_100(self):
+        reference = (0.2, 0.4, 0.6, 0.8)
+        artifact = make_artifact(reference_default_probabilities=reference)
+        score = vitality_score_from_default_probability(artifact, 0.01)
+        self.assertEqual(score, 100)
+
+    def test_a_value_above_every_reference_point_still_scores_0(self):
+        reference = (0.2, 0.4, 0.6, 0.8)
+        artifact = make_artifact(reference_default_probabilities=reference)
+        score = vitality_score_from_default_probability(artifact, 0.99)
+        self.assertEqual(score, 0)
+
+    def test_hand_computed_rank(self):
+        # 4 reference points; a value between the 2nd and 3rd -> rank 2 of 4.
+        reference = (0.1, 0.2, 0.3, 0.4)
+        artifact = make_artifact(reference_default_probabilities=reference)
+        score = vitality_score_from_default_probability(artifact, 0.25)
+        self.assertEqual(score, round(100 * (1 - 2 / 4)))
+
+    def test_result_is_always_within_bounds(self):
+        reference = tuple(sorted([0.01, 0.3, 0.3, 0.7, 0.99]))
+        artifact = make_artifact(reference_default_probabilities=reference)
+        for p in (-1.0, 0.0, 0.3, 1.0, 5.0):
+            score = vitality_score_from_default_probability(artifact, p)
+            self.assertGreaterEqual(score, 0)
+            self.assertLessEqual(score, 100)
+
+    def test_empty_reference_falls_back_to_the_linear_transform(self):
+        artifact = make_artifact(reference_default_probabilities=())
+        score = vitality_score_from_default_probability(artifact, 0.25)
+        self.assertEqual(score, round(100 * (1 - 0.25)))
+
+    def test_uniform_reference_produces_a_uniform_score_distribution(self):
+        """The whole point of the rank transform: scoring the reference
+        population itself against its own distribution spreads evenly."""
+        reference = tuple(i / 1000 for i in range(1000))
+        artifact = make_artifact(reference_default_probabilities=reference)
+        scores = [
+            vitality_score_from_default_probability(artifact, p) for p in reference
+        ]
+        buckets = [0] * 10
+        for s in scores:
+            buckets[min(9, s // 10)] += 1
+        # No bucket should dominate the way the old linear transform's 90-100
+        # bucket did (measured at 83.8% of the population).
+        self.assertLess(max(buckets), 0.5 * len(scores))
 
 
 class TestArtifactPersistence(unittest.TestCase):

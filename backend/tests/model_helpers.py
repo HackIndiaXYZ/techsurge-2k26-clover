@@ -10,16 +10,26 @@ from __future__ import annotations
 from backend.model.artifact import BandCutoffs, PREDICTIVE_FEATURES, ScorecardArtifact
 
 
+# 101 evenly spaced points from 0.0 to 1.0 -- a synthetic reference
+# distribution wide enough that any p_default computed by these tests lands
+# somewhere sane in the percentile ranking, without depending on a real
+# trained model's test-split probabilities.
+DEFAULT_REFERENCE_DEFAULT_PROBABILITIES = tuple(round(i / 100, 4) for i in range(101))
+
+
 def make_artifact(
     coefficients: dict[str, float] | None = None,
     intercept: float = 0.0,
     strong_candidate_max: float = 0.1,
     high_risk_referral_min: float = 0.5,
+    reference_default_probabilities: tuple[float, ...] | None = None,
 ) -> ScorecardArtifact:
     """All means=0, scales=1 by default, so standardized value == raw value
     unless a test overrides scaler_mean/scaler_scale directly on the result.
     """
     coefficients = coefficients or {name: 0.0 for name in PREDICTIVE_FEATURES}
+    if reference_default_probabilities is None:
+        reference_default_probabilities = DEFAULT_REFERENCE_DEFAULT_PROBABILITIES
     return ScorecardArtifact(
         trained_at="2026-01-01T00:00:00+00:00",
         train_seed=0,
@@ -35,6 +45,7 @@ def make_artifact(
         ),
         train_profile_ids=("TRAIN0001",),
         test_profile_ids=("TEST0001",),
+        reference_default_probabilities=reference_default_probabilities,
     )
 
 

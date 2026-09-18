@@ -164,7 +164,7 @@ def compute_portfolio_metrics(
         fv = feature_values_from_row(row)
         p_default = predict_default_probability(artifact, fv)
 
-        scores.append(vitality_score_from_default_probability(p_default))
+        scores.append(vitality_score_from_default_probability(artifact, p_default))
         band_distribution[artifact.band_cutoffs.band_for(p_default)] += 1
 
         strengths, concerns = rank_reason_codes(artifact, fv)
@@ -251,12 +251,12 @@ def run_stability_check(artifact: ScorecardArtifact) -> dict:
 
         fv_24 = extract_features(profile).as_dict()
         p_default_24 = predict_default_probability(artifact, fv_24)
-        score_24 = vitality_score_from_default_probability(p_default_24)
+        score_24 = vitality_score_from_default_probability(artifact, p_default_24)
 
         truncated = truncate_seen_window(profile, STABILITY_CHECK_MONTHS)
         fv_12 = extract_features(truncated).as_dict()
         p_default_12 = predict_default_probability(artifact, fv_12)
-        score_12 = vitality_score_from_default_probability(p_default_12)
+        score_12 = vitality_score_from_default_probability(artifact, p_default_12)
 
         results.append(
             {
