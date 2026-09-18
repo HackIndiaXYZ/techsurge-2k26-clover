@@ -25,54 +25,41 @@ class MockBackend implements CloverApiService {
 
   // ── Profile fixtures ─────────────────────────────────────────────────────
 
-  /// Example 1 — SCORED · "Lakshmi" street-food vendor (from task spec verbatim).
+  /// Example 1 — SCORED · "Lakshmi" street-food vendor.
+  /// Vitality score 91.0 matches the real trained model's score for demo_lakshmi.
   static final Map<String, dynamic> _lakshmi = {
     'profile_id': 'lakshmi_vendor_001',
     'outcome': 'SCORED',
-    'vitality_score': 71.5,
+    'vitality_score': 91.0,
     'band': 'strong_candidate',
     'confidence': 'high',
     'reason_codes': {
       'strengths': [
         {
-          'feature': 'income_regularity',
+          'feature': 'ontime_bill_payment_rate',
           'statement':
-              'Income arrived in 94% of weeks over the last 24 months — very steady.',
-          'contribution': 0.31,
+              'Rent and utility bills were paid on time 100% of the time.',
+          'contribution': 0.729,
         },
         {
-          'feature': 'growth_trend',
+          'feature': 'months_would_cover_emi_of_last_24',
           'statement':
-              'Turnover grew steadily over the last 6 months, including a clear festival-season spike.',
-          'contribution': 0.22,
+              'Income would have covered an indicative loan payment in 24 of the last 24 months.',
+          'contribution': 0.549,
         },
         {
-          'feature': 'affordability',
+          'feature': 'trend_last_6_months',
           'statement':
-              'Could comfortably absorb an indicative EMI in 22 of the last 24 months.',
-          'contribution': 0.19,
+              'Income is up 19% versus the same period a year earlier — growing.',
+          'contribution': 0.514,
         },
       ],
-      'concerns': [
-        {
-          'feature': 'cash_share',
-          'statement':
-              'About 30% of transactions are cash-based, which slightly lowers confidence '
-              'in the digital trail (this is not treated as a negative on its own).',
-          'contribution': -0.06,
-        },
-        {
-          'feature': 'buffer_days',
-          'statement':
-              'Cash buffer covers about 9 days of expenses — thinner than ideal.',
-          'contribution': -0.08,
-        },
-      ],
+      'concerns': [],
     },
     'affordability': {
-      'indicative_emi_low': 2800.0,
-      'indicative_emi_high': 4200.0,
-      'months_would_cover_emi_of_last_24': 22,
+      'indicative_emi_low': 8989.59,
+      'indicative_emi_high': 13606.68,
+      'months_would_cover_emi_of_last_24': 24,
     },
     'monthly_cashflow': [
       {'month': '2024-03', 'inflow': 42000.0, 'outflow': 32000.0, 'net': 10000.0},

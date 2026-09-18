@@ -60,7 +60,21 @@ frontend/lib/
 
 ---
 
-## Previous sessions
+---
 
-None — this is the first agent session on this repo.
-(Teammate `yash/backend` branch: feature extraction, sufficiency gates, held-out labels — merged to main via PR#2)
+## Session 2: Mock alignment with trained model (91.0 score)
+
+### Completed
+- In `frontend/lib/mock_backend.dart`: updated `_lakshmi` vitality_score from 71.5 to 91.0 (matching real trained model for `demo_lakshmi`).
+- Updated `_lakshmi` reason codes and affordability to be internally consistent with 91.0 score:
+  - Strengths: `ontime_bill_payment_rate` (+0.729), `months_would_cover_emi_of_last_24` (+0.549), `trend_last_6_months` (+0.514).
+  - Concerns: empty list (strong candidate, 0 concerns).
+  - Affordability: `indicative_emi_low: 8989.59`, `indicative_emi_high: 13606.68`, `months_would_cover_emi_of_last_24: 24`.
+- In `frontend/lib/services/clover_http_service.dart`: added TODO comment above `getAvailableProfileIds()` noting pending confirmation with backend on exact demo profile IDs in `/data`. Left IDs and `analyzeProfile()` untouched.
+- In `frontend/test/clover_test.dart`: updated test assertion from 71.5 to 91.0.
+- Verification: `flutter analyze` passed (0 issues), `flutter test` passed (15/15 tests).
+
+### Rejected alternatives
+- Did NOT modify `analyzeProfile()` request body or URL in `clover_http_service.dart` — waiting for backend's `GET /api/profiles/{profile_id}` endpoint to be shipped and confirmed.
+- Did NOT alter demo profile IDs in `clover_http_service.dart` pending backend confirmation.
+

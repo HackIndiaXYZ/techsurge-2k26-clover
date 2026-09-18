@@ -193,7 +193,7 @@ void main() {
     test('analyzeProfile returns SCORED for lakshmi', () async {
       final result = await backend.analyzeProfile('lakshmi_vendor_001');
       expect(result.outcome, 'SCORED');
-      expect(result.vitalityScore, closeTo(71.5, 0.001));
+      expect(result.vitalityScore, closeTo(91.0, 0.001));
       expect(result.band, 'strong_candidate');
       expect(result.disclaimer, isNotEmpty);
     });

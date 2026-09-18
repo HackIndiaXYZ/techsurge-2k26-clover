@@ -13,6 +13,7 @@ class CloverHttpService implements CloverApiService {
     http.Client? client,
   }) : _client = client ?? http.Client();
 
+  // TODO: Pending confirmation with the backend on exact demo profile ids in /data before changing
   @override
   List<String> getAvailableProfileIds() {
     // When live backend is wired up, can fetch from /api/profiles or keep known sample list
