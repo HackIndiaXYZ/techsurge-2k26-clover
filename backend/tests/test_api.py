@@ -23,8 +23,8 @@ except ImportError:
     HAS_FASTAPI = False
 
 if HAS_FASTAPI:
-    from backend.api.dependencies import get_artifact, get_metrics
-    from backend.api.main import DATA_DIR, app
+    from backend.api.dependencies import DATA_DIR, DEMO_PROFILES, get_artifact, get_metrics
+    from backend.api.main import app
     from backend.tests.model_helpers import make_artifact
     from backend.tests.test_scorecard import dense_profile
 
@@ -286,6 +286,44 @@ class TestRunsWithoutATrainedModelOnDisk(unittest.TestCase):
 
 
 @unittest.skipUnless(HAS_FASTAPI, "fastapi/httpx not installed (system Python) -- run under .venv")
+class TestDemoProfilesFailFastAtStartup(unittest.TestCase):
+    """Regression test for a real code-review finding: GET /api/profiles/{id}
+    originally read, parsed and validated its backing JSON file fresh on
+    every request, with no error handling -- so a missing/malformed demo
+    file surfaced as an unhandled 500 on whatever request first hit it,
+    contradicting the endpoint's own promise of a clean 404/422 only.
+
+    The fix moved demo-profile loading into dependencies.load_state(),
+    exactly like the model artifact and metrics.json: loaded once, eagerly,
+    at startup. This test proves a broken demo file now fails
+    load_state() itself -- the same "fail fast at startup" behavior
+    ScorecardArtifact.load() already had -- rather than surfacing per
+    request.
+    """
+
+    def test_missing_demo_file_raises_at_load_state_not_per_request(self):
+        from backend.api.dependencies import DATA_DIR, DEMO_PROFILES, load_state
+
+        filename = DEMO_PROFILES["thin_file_002"]
+        path = DATA_DIR / filename
+        if not path.exists():
+            self.skipTest("demo file not present on disk to begin with")
+
+        import shutil
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            moved = f"{tmp}/{filename}"
+            shutil.move(str(path), moved)
+            try:
+                with self.assertRaises(FileNotFoundError) as ctx:
+                    load_state()
+                self.assertIn("thin_file_002", str(ctx.exception))
+            finally:
+                shutil.move(moved, str(path))
+
+
+@unittest.skipUnless(HAS_FASTAPI, "fastapi/httpx not installed (system Python) -- run under .venv")
 class TestProfileLookupEndpoint(unittest.TestCase):
     """GET /api/profiles/{profile_id} -- the demo-lookup bridge for the
     frontend's 4 hardcoded ids, which post only {profile_id} to /api/analyze
@@ -295,6 +333,8 @@ class TestProfileLookupEndpoint(unittest.TestCase):
     """
 
     def setUp(self):
+        from backend.api.dependencies import _load_demo_profiles, get_demo_profiles
+
         self.artifact = make_artifact(
             coefficients={
                 "months_would_cover_emi_of_last_24": 1.2,
@@ -302,19 +342,23 @@ class TestProfileLookupEndpoint(unittest.TestCase):
             },
             intercept=2.0,
         )
+        # Loads the REAL committed demo files once here, so these tests
+        # exercise real content (e.g. thin_file_002's actual NOT_ASSESSABLE
+        # gate outcome) without depending on the app's own load_state()
+        # having run globally.
+        demo_profiles = _load_demo_profiles()
         app.dependency_overrides[get_artifact] = lambda: self.artifact
         app.dependency_overrides[get_metrics] = lambda: FIXTURE_METRICS
+        app.dependency_overrides[get_demo_profiles] = lambda: demo_profiles
 
     def tearDown(self):
         app.dependency_overrides.clear()
 
     def test_all_four_frontend_ids_resolve(self):
-        for profile_id in (
-            "lakshmi_vendor_001",
-            "thin_file_002",
-            "dormancy_gap_003",
-            "ramesh_carpentry_004",
-        ):
+        # Iterates DEMO_PROFILES itself, not a hardcoded copy of its keys --
+        # if that map ever adds/renames/removes an id, this test's coverage
+        # moves with it instead of silently testing a stale list.
+        for profile_id in DEMO_PROFILES:
             with self.subTest(profile_id=profile_id):
                 client = TestClient(app)
                 response = client.get(f"/api/profiles/{profile_id}")
@@ -365,12 +409,7 @@ class TestProfileLookupEndpoint(unittest.TestCase):
         client = TestClient(app)
         response = client.get("/api/profiles/nope")
         detail = response.json()["detail"]
-        for known_id in (
-            "lakshmi_vendor_001",
-            "thin_file_002",
-            "dormancy_gap_003",
-            "ramesh_carpentry_004",
-        ):
+        for known_id in DEMO_PROFILES:
             self.assertIn(known_id, detail)
 
 

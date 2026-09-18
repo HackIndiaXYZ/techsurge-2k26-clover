@@ -193,15 +193,25 @@ business with a clear festival-season spike when its monthly totals are
 printed or plotted, not just to statistically pass the generator's own
 tier logic.
 
-### Two more demo profiles, added to match the frontend's hardcoded ids
+### Three more demo profiles, added to match the frontend's hardcoded ids
 
 The frontend skeleton hardcodes 4 demo profile ids
-(`clover_http_service.dart::getAvailableProfileIds`); only 2 had a matching
-committed profile. `data/demo_profile_ramesh_carpentry.json` and
-`data/demo_profile_dormancy_gap.json` were added to cover the other 2, both
+(`clover_http_service.dart::getAvailableProfileIds`); only `lakshmi_vendor_001`
+had a matching committed profile. `data/demo_profile_thin_file.json`,
+`data/demo_profile_ramesh_carpentry.json` and
+`data/demo_profile_dormancy_gap.json` were added to cover the other 3, all
 via `generate_dataset.py` builder functions following the same
 hand-tuning pattern as `build_demo_profile_lakshmi`:
 
+- **`build_demo_profile_thin_file`** — `kirana_store`, `stable` tier, a fixed
+  seed landing on 5 months of history (`NOT_ASSESSABLE`). Backs
+  `thin_file_002`. Deliberately its own dedicated builder rather than an
+  alias to `data/sample_profile.json`: that file is picked as "whichever
+  short-history, non-cash-heavy profile happens to come first" in `main()`'s
+  bulk-generation loop -- deterministic under a fixed `--seed`, but its exact
+  identity is an accident of loop order, and would silently change if the
+  bulk generation logic or edge-case counts ever changed. A demo id a
+  frontend hardcodes needs an identity independent of that.
 - **`build_demo_profile_ramesh_carpentry`** — `tailor_salon`, `stable` tier,
   otherwise plain generation (no special tuning). **The generator has no
   dedicated "carpentry" archetype** — only `street_food_vendor`,
@@ -224,10 +234,11 @@ hand-tuning pattern as `build_demo_profile_lakshmi`:
   concern — an honest side effect of that feature's documented coherence-
   filter behavior (see "Reason codes" below), not a bug in this profile.
 
-Both are served via `GET /api/profiles/{profile_id}` (`backend/api/README.md`),
-not through the bulk-generated, gitignored `/data/generated/` — they're
-committed alongside `demo_profile_lakshmi.json` since they're referenced by
-a fixed, known id, not sampled from the 500+ population.
+All three are served via `GET /api/profiles/{profile_id}`
+(`backend/api/README.md`), not through the bulk-generated, gitignored
+`/data/generated/` — they're committed alongside `demo_profile_lakshmi.json`
+since they're referenced by a fixed, known id, not sampled from the 500+
+population.
 
 ---
 

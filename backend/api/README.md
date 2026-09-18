@@ -171,7 +171,7 @@ clover_http_service.dart::getAvailableProfileIds`) now all resolve:
 | Frontend id | Backed by | Story |
 |---|---|---|
 | `lakshmi_vendor_001` | `data/demo_profile_lakshmi.json` | thriving street food vendor (Y1's original demo profile) |
-| `thin_file_002` | `data/sample_profile.json` | genuine 5-month short-history profile — exercises the real sufficiency gate |
+| `thin_file_002` | `data/demo_profile_thin_file.json` | genuine 5-month short-history profile, its own fixed-seed builder (deliberately not an alias to `data/sample_profile.json`, whose exact identity is order-dependent on the bulk generation loop) — exercises the real sufficiency gate |
 | `dormancy_gap_003` | `data/demo_profile_dormancy_gap.json` | failing kirana store with a hand-carved 60-day dormancy gap in the middle of its history |
 | `ramesh_carpentry_004` | `data/demo_profile_ramesh_carpentry.json` | stable small trade business. **No dedicated "carpentry" archetype exists in the generator** — `tailor_salon` (a materials-plus-service small trade) is used as the closest available fit, documented in `generate_dataset.py::build_demo_profile_ramesh_carpentry` and `docs/DATA_SCHEMA.md`, not a silent substitution. |
 
