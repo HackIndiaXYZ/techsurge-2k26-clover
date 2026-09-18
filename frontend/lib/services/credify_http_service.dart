@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/analyze_response.dart';
 import '../models/portfolio_response.dart';
-import 'clover_api_service.dart';
+import 'credify_api_service.dart';
 
-class CloverHttpService implements CloverApiService {
+class CredifyHttpService implements CredifyApiService {
   final String baseUrl;
   final http.Client _client;
 
-  CloverHttpService({
+  CredifyHttpService({
     this.baseUrl = 'http://localhost:8000',
     http.Client? client,
   }) : _client = client ?? http.Client();

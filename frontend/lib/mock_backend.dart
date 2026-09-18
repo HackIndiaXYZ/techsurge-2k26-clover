@@ -1,9 +1,9 @@
-// mock_backend.dart — Clover · TechSurge 2k26 · PS-F02
+// mock_backend.dart — Credify · TechSurge 2k26 · PS-F02
 //
 // This file is a MOCK data layer. It returns hard-coded Dart objects that
 // match the exact JSON contract of the FastAPI backend (POST /api/analyze
 // and GET /api/portfolio). When the live backend is ready, the only change
-// needed is to swap MockBackend for CloverHttpService in main.dart
+// needed is to swap MockBackend for CredifyHttpService in main.dart
 // (the `_useMock` flag). No screen widget should need changes.
 //
 // ─── Portfolio figures are ILLUSTRATIVE PLACEHOLDERS ──────────────────────
@@ -16,9 +16,9 @@
 
 import 'models/analyze_response.dart';
 import 'models/portfolio_response.dart';
-import 'services/clover_api_service.dart';
+import 'services/credify_api_service.dart';
 
-class MockBackend implements CloverApiService {
+class MockBackend implements CredifyApiService {
   static const String disclaimerText =
       'Research prototype on synthetic data. Not a lending decision system. '
       'Decision-support signal only — final lending decision rests with the lender.';
@@ -207,7 +207,7 @@ class MockBackend implements CloverApiService {
     ],
   };
 
-  // ── CloverApiService implementation ─────────────────────────────────────
+  // ── CredifyApiService implementation ─────────────────────────────────────
 
   @override
   List<String> getAvailableProfileIds() => _profiles.keys.toList();

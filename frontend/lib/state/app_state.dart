@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import '../models/analyze_response.dart';
-import '../services/clover_api_service.dart';
+import '../services/credify_api_service.dart';
 
-enum LenderStep { idle, bureauChecked, clovering, done }
+enum LenderStep { idle, bureauChecked, credifying, done }
 
 class AppState extends ChangeNotifier {
-  final CloverApiService service;
+  final CredifyApiService service;
 
   AppState(this.service);
 
@@ -69,8 +69,8 @@ class AppState extends ChangeNotifier {
   bool get analyzeLoading => _analyzeLoading;
   String? get analyzeError => _analyzeError;
 
-  Future<void> runCloverAnalysis() async {
-    _lenderStep = LenderStep.clovering;
+  Future<void> runCredifyAnalysis() async {
+    _lenderStep = LenderStep.credifying;
     _analyzeLoading = true;
     _analyzeError = null;
     notifyListeners();

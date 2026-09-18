@@ -1,4 +1,4 @@
-# clover_frontend
+# credify_frontend
 
 A new Flutter project.
 

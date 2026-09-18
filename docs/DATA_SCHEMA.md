@@ -196,7 +196,7 @@ tier logic.
 ### Three more demo profiles, added to match the frontend's hardcoded ids
 
 The frontend skeleton hardcodes 4 demo profile ids
-(`clover_http_service.dart::getAvailableProfileIds`); only `lakshmi_vendor_001`
+(`credify_http_service.dart::getAvailableProfileIds`); only `lakshmi_vendor_001`
 had a matching committed profile. `data/demo_profile_thin_file.json`,
 `data/demo_profile_ramesh_carpentry.json` and
 `data/demo_profile_dormancy_gap.json` were added to cover the other 3, all

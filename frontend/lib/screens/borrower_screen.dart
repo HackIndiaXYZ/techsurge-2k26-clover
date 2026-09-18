@@ -19,7 +19,7 @@ class BorrowerScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Your Clover Vitality Signal',
+                'Your Credify Vitality Signal',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 22,
@@ -44,7 +44,7 @@ class BorrowerScreen extends StatelessWidget {
                   color: const Color(0xFFFBBF24),
                   title: 'Consent not yet given',
                   body: 'Go to the Consent tab and approve data sharing, '
-                      'then ask the lender to run the Clover check. '
+                      'then ask the lender to run the Credify check. '
                       'Your results will appear here.',
                 )
               else if (result == null)
@@ -53,7 +53,7 @@ class BorrowerScreen extends StatelessWidget {
                   color: const Color(0xFF60A5FA),
                   title: 'Awaiting assessment',
                   body: 'Your data has been shared. '
-                      'The lender needs to run the Clover alternative-data check. '
+                      'The lender needs to run the Credify alternative-data check. '
                       'Results will appear here once it\'s done.',
                 )
               else
@@ -84,7 +84,7 @@ class _BorrowerResultView extends StatelessWidget {
           icon: Icons.waving_hand_outlined,
           color: const Color(0xFF10B981),
           title: 'Your financial record has been assessed',
-          body: 'Clover looked at your transaction history to understand '
+          body: 'Credify looked at your transaction history to understand '
               'your income patterns and financial behaviour — without a '
               'traditional credit score.',
         ),
@@ -243,7 +243,7 @@ class _NotAssessableView extends StatelessWidget {
               Text(
                 'Continue using a bank account or UPI for your business '
                 'transactions. The more months of digital transaction history '
-                'you have, the stronger the signal that Clover can generate. '
+                'you have, the stronger the signal that Credify can generate. '
                 'Try again after building a few more months of digital records.',
                 style: TextStyle(
                   color: Color(0xFF9CA3AF),
@@ -281,7 +281,7 @@ class _ActionableTip extends StatelessWidget {
     }
     if (features.contains('cash_share')) {
       return 'Routing more of your sales through UPI or bank transfer (rather than '
-          'cash) gives Clover a clearer digital picture of your income and can '
+          'cash) gives Credify a clearer digital picture of your income and can '
           'improve your next assessment.';
     }
     return 'Keep your business account active and consistent. Regular digital '

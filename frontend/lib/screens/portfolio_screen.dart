@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../mock_backend.dart';
 import '../models/portfolio_response.dart';
-import '../services/clover_api_service.dart';
+import '../services/credify_api_service.dart';
 import '../widgets/score_histogram_chart.dart';
 
 class PortfolioScreen extends StatefulWidget {
-  final CloverApiService service;
+  final CredifyApiService service;
   const PortfolioScreen({super.key, required this.service});
 
   @override
@@ -62,7 +62,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           Text(
             widget.service is MockBackend
                 ? 'Aggregate signal metrics — ILLUSTRATIVE PLACEHOLDER data (mock backend).'
-                : 'Aggregate signal metrics — live from the Clover backend.',
+                : 'Aggregate signal metrics — live from the Credify backend.',
             style: const TextStyle(
               color: Color(0xFF6B7280),
               fontSize: 12,

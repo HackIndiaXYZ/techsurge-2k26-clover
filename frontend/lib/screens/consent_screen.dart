@@ -9,7 +9,7 @@ class ConsentScreen extends StatelessWidget {
   static const String _fipName = 'Sahyadri Gramin Co-op Bank [Simulated — illustrative only]';
   static const String _aaName = 'Setu-AA Gateway [Simulated — illustrative only]';
   static const String _purpose =
-      'Clover will access 24 months of transaction history '
+      'Credify will access 24 months of transaction history '
       'to compute an alternative credit-worthiness signal '
       'for lender evaluation only. No data is shared with '
       'third parties outside this session.';
@@ -301,7 +301,7 @@ class _ConsentGrantedBadge extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Data for profile "$profileId" is now available for lender assessment. '
-            'Navigate to the Lender tab to run the Clover check.',
+            'Navigate to the Lender tab to run the Credify check.',
             style: const TextStyle(
               color: Color(0xFF9CA3AF),
               fontSize: 13,
