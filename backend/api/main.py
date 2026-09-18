@@ -18,7 +18,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from datetime import date
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.dependencies import get_artifact, get_metrics, load_state
@@ -65,6 +65,20 @@ app.add_middleware(
 )
 
 
+# A generous but hard upper bound on how much calendar time a single
+# request's transactions may span. Every window helper (iter_week_keys,
+# iter_month_keys, feature_engine's dry-streak scan) walks the seen window
+# one day at a time, so an unbounded span is a real performance cliff -- and
+# at the extreme end, a span approaching Python's full date.min..date.max
+# range causes an unhandled OverflowError: the day-by-day loop increments
+# one day past date.max before its own while-condition gets a chance to stop
+# it. Real MSME histories in this project's domain are at most a few years;
+# 10 years is comfortably above any legitimate use and still only a few
+# thousand fast loop iterations, so requests beyond it are rejected with a
+# clean 422 rather than allowed to hang or crash.
+MAX_HISTORY_SPAN_DAYS = 3653  # ~10 years
+
+
 def _request_to_profile(request: AnalyzeRequest) -> Profile:
     """Build a Profile from an AnalyzeRequest.
 
@@ -89,11 +103,26 @@ def _request_to_profile(request: AnalyzeRequest) -> Profile:
     degenerate) Profile: assess_sufficiency correctly reads that as 0 months /
     0 transactions and returns NOT_ASSESSABLE, rather than this function
     raising on an empty min()/max().
+
+    Raises HTTPException(422) if the transaction dates span more than
+    MAX_HISTORY_SPAN_DAYS -- see that constant for why this is checked here,
+    before any window helper walks the range day by day.
     """
     transactions = request.transactions
     if transactions:
         history_start_date = min(t.date for t in transactions)
         history_end_date = max(t.date for t in transactions)
+        span_days = (history_end_date - history_start_date).days
+        if span_days > MAX_HISTORY_SPAN_DAYS:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"Transaction dates span {span_days} days "
+                    f"({history_start_date} to {history_end_date}), which is more "
+                    f"than the {MAX_HISTORY_SPAN_DAYS}-day maximum a single profile "
+                    "may span."
+                ),
+            )
     else:
         history_end_date = date.today()
         history_start_date = history_end_date

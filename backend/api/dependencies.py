@@ -63,12 +63,3 @@ def get_metrics() -> dict:
             "before any request is served (see main.py's lifespan handler)."
         )
     return _metrics
-
-
-def reset_state_for_tests(
-    artifact: ScorecardArtifact | None, metrics: dict | None
-) -> None:
-    """Test-only override, bypassing disk entirely. Not used by the app itself."""
-    global _artifact, _metrics
-    _artifact = artifact
-    _metrics = metrics

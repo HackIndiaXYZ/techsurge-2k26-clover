@@ -62,8 +62,8 @@ FIXTURE_METRICS = {
 @unittest.skipUnless(HAS_FASTAPI, "fastapi/httpx not installed (system Python) -- run under .venv")
 class TestHealth(unittest.TestCase):
     def test_health_returns_200(self):
-        with TestClient(app) as client:
-            response = client.get("/api/health")
+        client = TestClient(app)
+        response = client.get("/api/health")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
 
@@ -88,8 +88,8 @@ class TestAnalyzeEndpoint(unittest.TestCase):
         profile = dense_profile(24)
         body = _profile_to_analyze_request_body(profile)
 
-        with TestClient(app) as client:
-            response = client.post("/api/analyze", json=body)
+        client = TestClient(app)
+        response = client.post("/api/analyze", json=body)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -109,8 +109,8 @@ class TestAnalyzeEndpoint(unittest.TestCase):
         profile = dense_profile(3)  # NOT_ASSESSABLE
         body = _profile_to_analyze_request_body(profile)
 
-        with TestClient(app) as client:
-            response = client.post("/api/analyze", json=body)
+        client = TestClient(app)
+        response = client.post("/api/analyze", json=body)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -126,8 +126,8 @@ class TestAnalyzeEndpoint(unittest.TestCase):
         profile = dense_profile(9)  # LOW_CONFIDENCE (months rule, dense enough)
         body = _profile_to_analyze_request_body(profile)
 
-        with TestClient(app) as client:
-            response = client.post("/api/analyze", json=body)
+        client = TestClient(app)
+        response = client.post("/api/analyze", json=body)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -137,8 +137,8 @@ class TestAnalyzeEndpoint(unittest.TestCase):
 
     def test_empty_transactions_is_not_assessable_not_an_error(self):
         body = {"profile_id": "EMPTY0001", "transactions": [], "months_available": 0}
-        with TestClient(app) as client:
-            response = client.post("/api/analyze", json=body)
+        client = TestClient(app)
+        response = client.post("/api/analyze", json=body)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["outcome"], "NOT_ASSESSABLE")
@@ -154,47 +154,134 @@ class TestMalformedRequests(unittest.TestCase):
         app.dependency_overrides.clear()
 
     def test_missing_required_field_is_422_not_500(self):
-        with TestClient(app) as client:
-            response = client.post("/api/analyze", json={"profile_id": "X"})
+        client = TestClient(app)
+        response = client.post("/api/analyze", json={"profile_id": "X"})
         self.assertEqual(response.status_code, 422)
 
     def test_wrong_type_is_422_not_500(self):
-        with TestClient(app) as client:
-            response = client.post(
-                "/api/analyze",
-                json={
-                    "profile_id": "X",
-                    "transactions": "not-a-list",
-                    "months_available": "not-an-int",
-                },
-            )
+        client = TestClient(app)
+        response = client.post(
+            "/api/analyze",
+            json={
+                "profile_id": "X",
+                "transactions": "not-a-list",
+                "months_available": "not-an-int",
+            },
+        )
         self.assertEqual(response.status_code, 422)
 
     def test_malformed_transaction_is_422_not_500(self):
-        with TestClient(app) as client:
-            response = client.post(
-                "/api/analyze",
-                json={
-                    "profile_id": "X",
-                    "transactions": [{"date": "2024-01-01", "amount": -5}],  # negative, missing fields
-                    "months_available": 1,
-                },
-            )
+        client = TestClient(app)
+        response = client.post(
+            "/api/analyze",
+            json={
+                "profile_id": "X",
+                "transactions": [{"date": "2024-01-01", "amount": -5}],  # negative, missing fields
+                "months_available": 1,
+            },
+        )
         self.assertEqual(response.status_code, 422)
 
     def test_completely_empty_body_is_422_not_500(self):
-        with TestClient(app) as client:
-            response = client.post("/api/analyze", json={})
+        client = TestClient(app)
+        response = client.post("/api/analyze", json={})
         self.assertEqual(response.status_code, 422)
 
     def test_non_json_body_is_422_not_500(self):
-        with TestClient(app) as client:
-            response = client.post(
-                "/api/analyze",
-                content=b"not json at all",
-                headers={"Content-Type": "application/json"},
-            )
+        client = TestClient(app)
+        response = client.post(
+            "/api/analyze",
+            content=b"not json at all",
+            headers={"Content-Type": "application/json"},
+        )
         self.assertEqual(response.status_code, 422)
+
+    def test_extreme_date_span_is_422_not_a_crash(self):
+        """Regression test for a real bug a code review caught: two
+        individually-valid transaction dates near date.min and date.max made
+        Profile.meta.history_start_date/end_date span ~3.65 million days.
+        extract_features runs BEFORE the sufficiency gate, and its window
+        helpers walk that span one day at a time -- reproduced directly: this
+        took ~2.7s of CPU and then raised an unhandled OverflowError (the
+        day-by-day loop increments one day past date.max before its own
+        while-condition can stop it), surfacing as an unhandled 500, not the
+        422 this endpoint promises. Fixed with an explicit span check in
+        _request_to_profile (MAX_HISTORY_SPAN_DAYS) before any window helper
+        ever sees the dates.
+        """
+        client = TestClient(app)
+        body = {
+            "profile_id": "evil",
+            "transactions": [
+                {
+                    "date": "0001-01-01",
+                    "direction": "in",
+                    "amount": 10,
+                    "channel": "upi",
+                    "counterparty_type": "customer",
+                    "category": "sales",
+                },
+                {
+                    "date": "9999-12-31",
+                    "direction": "in",
+                    "amount": 10,
+                    "channel": "upi",
+                    "counterparty_type": "customer",
+                    "category": "sales",
+                },
+            ],
+            "months_available": 1,
+        }
+
+        import time
+
+        start = time.monotonic()
+        response = client.post("/api/analyze", json=body)
+        elapsed = time.monotonic() - start
+
+        self.assertEqual(response.status_code, 422)
+        self.assertLess(elapsed, 1.0, "should reject immediately, not walk the span first")
+
+
+@unittest.skipUnless(HAS_FASTAPI, "fastapi/httpx not installed (system Python) -- run under .venv")
+class TestRunsWithoutATrainedModelOnDisk(unittest.TestCase):
+    """Regression test for a real bug a code review caught: `with TestClient(app)
+    as client:` runs the FastAPI lifespan handler, which unconditionally calls
+    dependencies.load_state() and reads the trained model from disk --
+    bypassing dependency_overrides entirely, since the lifespan handler isn't
+    reached through Depends(). Every test in this file used to fail with
+    FileNotFoundError on a fresh clone that hadn't run train_scorecard.py yet,
+    directly contradicting this module's own docstring.
+
+    The fix is to never use the `with` (context-manager) form of TestClient in
+    this file -- a bare TestClient(app) does not trigger lifespan at all, so
+    dependency_overrides is the only thing that runs. This test proves that
+    property directly by moving the real artifact out of the way first.
+    """
+
+    def test_health_endpoint_works_with_the_model_artifact_missing(self):
+        import shutil
+        import tempfile
+
+        from backend.model.artifact import ARTIFACT_PATH
+
+        app.dependency_overrides[get_artifact] = lambda: make_artifact()
+        app.dependency_overrides[get_metrics] = lambda: FIXTURE_METRICS
+        self.addCleanup(app.dependency_overrides.clear)
+
+        if not ARTIFACT_PATH.exists():
+            self.skipTest("no trained model on disk to begin with -- nothing to prove")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            moved = f"{tmp}/scorecard_model.json"
+            shutil.move(str(ARTIFACT_PATH), moved)
+            try:
+                client = TestClient(app)  # bare -- must NOT touch disk
+                response = client.get("/api/health")
+            finally:
+                shutil.move(moved, str(ARTIFACT_PATH))
+
+        self.assertEqual(response.status_code, 200)
 
 
 @unittest.skipUnless(HAS_FASTAPI, "fastapi/httpx not installed (system Python) -- run under .venv")
@@ -207,8 +294,8 @@ class TestPortfolioEndpoint(unittest.TestCase):
         app.dependency_overrides.clear()
 
     def test_portfolio_maps_metrics_json_exactly(self):
-        with TestClient(app) as client:
-            response = client.get("/api/portfolio")
+        client = TestClient(app)
+        response = client.get("/api/portfolio")
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["n_profiles"], 521)
@@ -233,34 +320,34 @@ class TestCors(unittest.TestCase):
         app.dependency_overrides.clear()
 
     def test_localhost_origin_is_allowed(self):
-        with TestClient(app) as client:
-            response = client.get(
-                "/api/portfolio", headers={"Origin": "http://localhost:54231"}
-            )
+        client = TestClient(app)
+        response = client.get(
+            "/api/portfolio", headers={"Origin": "http://localhost:54231"}
+        )
         self.assertEqual(
             response.headers.get("access-control-allow-origin"),
             "http://localhost:54231",
         )
 
     def test_preflight_request_is_allowed_for_localhost(self):
-        with TestClient(app) as client:
-            response = client.options(
-                "/api/analyze",
-                headers={
-                    "Origin": "http://localhost:3000",
-                    "Access-Control-Request-Method": "POST",
-                },
-            )
+        client = TestClient(app)
+        response = client.options(
+            "/api/analyze",
+            headers={
+                "Origin": "http://localhost:3000",
+                "Access-Control-Request-Method": "POST",
+            },
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.headers.get("access-control-allow-origin"), "http://localhost:3000"
         )
 
     def test_non_localhost_origin_is_not_reflected(self):
-        with TestClient(app) as client:
-            response = client.get(
-                "/api/portfolio", headers={"Origin": "http://evil.example.com"}
-            )
+        client = TestClient(app)
+        response = client.get(
+            "/api/portfolio", headers={"Origin": "http://evil.example.com"}
+        )
         self.assertNotEqual(
             response.headers.get("access-control-allow-origin"), "http://evil.example.com"
         )
