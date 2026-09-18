@@ -915,21 +915,13 @@ def main() -> None:
 
     demo = build_demo_profile_lakshmi()
     demo_json = demo.model_dump_json(indent=2, exclude_none=False)
-    (args.out_dir / "demo_lakshmi.json").write_text(demo_json)
+    thin_file_json = build_demo_profile_thin_file().model_dump_json(indent=2, exclude_none=False)
+    ramesh_json = build_demo_profile_ramesh_carpentry().model_dump_json(indent=2, exclude_none=False)
+    dormancy_json = build_demo_profile_dormancy_gap().model_dump_json(indent=2, exclude_none=False)
 
-    thin_file = build_demo_profile_thin_file()
-    thin_file_json = thin_file.model_dump_json(indent=2, exclude_none=False)
-    (args.out_dir / "demo_thin_file.json").write_text(thin_file_json)
-
-    ramesh = build_demo_profile_ramesh_carpentry()
-    ramesh_json = ramesh.model_dump_json(indent=2, exclude_none=False)
-    (args.out_dir / "demo_ramesh_carpentry.json").write_text(ramesh_json)
-
-    dormancy = build_demo_profile_dormancy_gap()
-    dormancy_json = dormancy.model_dump_json(indent=2, exclude_none=False)
-    (args.out_dir / "demo_dormancy_gap.json").write_text(dormancy_json)
-
-    # Committed reference copies (reuse the JSON already serialized above).
+    # Demo profiles go only to data/, never out_dir: out_dir is the training
+    # population build_feature_table globs, and these are hand-tuned fixtures.
+    # (demo_lakshmi still reaches training via COMMITTED_SAMPLES.)
     committed_dir = REPO_ROOT / "data"
     (committed_dir / "demo_profile_lakshmi.json").write_text(demo_json)
     (committed_dir / "demo_profile_thin_file.json").write_text(thin_file_json)
