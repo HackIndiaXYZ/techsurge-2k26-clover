@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/analyze_response.dart';
+import '../models/bureau_record.dart';
 import '../models/persona_meta.dart';
 import '../state/app_state.dart';
 import '../theme/credify_theme.dart';
@@ -113,47 +114,8 @@ class LenderScreen extends StatelessWidget {
                   ),
                 )
               else
-                GlassCard(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  borderColor: t.negative.withValues(alpha: 0.4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: t.negative,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'NO BUREAU FILE FOUND',
-                            style: TextStyle(
-                              color: t.negative,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'This borrower is credit invisible — no bureau record '
-                        'exists, so traditional scoring cannot proceed. This is '
-                        'exactly the gap Credify closes.',
-                        style: TextStyle(
-                          color: t.textSecondary,
-                          fontSize: 12.5,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
+                _BureauResult(
+                  record: BureauRecord.forId(state.selectedProfileId),
                 ),
 
               // ── Step 2: Credify signal ──────────────────────────────────
@@ -220,6 +182,155 @@ class LenderScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Step 1's outcome, in three flavours: no file at all (the credit-invisible
+/// majority), a thin and stale file, or a clean file. Note that a clean file
+/// is not an endorsement either — it records repayment of past borrowing, and
+/// says nothing about whether the business is earning today. Step 2 is what
+/// decides that, in every one of the three cases.
+class _BureauResult extends StatelessWidget {
+  final BureauRecord? record;
+  const _BureauResult({required this.record});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final r = record;
+
+    if (r == null) {
+      return GlassCard(
+        margin: const EdgeInsets.only(bottom: 14),
+        borderColor: t.negative.withValues(alpha: 0.4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration:
+                      BoxDecoration(color: t.negative, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'NO BUREAU FILE FOUND',
+                  style: TextStyle(
+                    color: t.negative,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'This borrower is credit invisible — no bureau record exists, so '
+              'traditional scoring cannot proceed. This is exactly the gap '
+              'Credify closes.',
+              style: TextStyle(
+                color: t.textSecondary,
+                fontSize: 12.5,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final healthy = r.quality == BureauFileQuality.healthy;
+    final accent = healthy ? t.positive : t.warning;
+
+    return GlassCard(
+      margin: const EdgeInsets.only(bottom: 14),
+      borderColor: accent.withValues(alpha: 0.4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration:
+                    BoxDecoration(color: accent, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  healthy
+                      ? 'CLEAN BUREAU FILE FOUND'
+                      : 'THIN BUREAU FILE FOUND',
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+              const StatusBadge(label: 'SIMULATED', color: Color(0xFF9CA3AF)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${r.score}',
+                style: TextStyle(
+                  color: accent,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 3),
+                child: Text(
+                  r.scale,
+                  style: TextStyle(color: t.textTertiary, fontSize: 12),
+                ),
+              ),
+              const Spacer(),
+              Flexible(
+                child: Text(
+                  r.vintage,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(color: t.textTertiary, fontSize: 11),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            r.summary,
+            style: TextStyle(
+              color: t.textSecondary,
+              fontSize: 12.5,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Illustrative bureau record on synthetic data — no bureau was '
+            'queried, and nothing here reaches the Credify score.',
+            style: TextStyle(
+              color: t.textTertiary,
+              fontSize: 10.5,
+              fontStyle: FontStyle.italic,
+              height: 1.45,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

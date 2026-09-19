@@ -34,6 +34,16 @@ class PersonaMeta {
       name: 'Ramesh',
       sector: 'Carpentry / small trade',
     ),
+    'meera_tailor_005': PersonaMeta(
+      icon: Icons.content_cut_outlined,
+      name: 'Meera',
+      sector: 'Tailoring studio',
+    ),
+    'arjun_kirana_006': PersonaMeta(
+      icon: Icons.shopping_basket_outlined,
+      name: 'Arjun',
+      sector: 'Kirana store',
+    ),
   };
 
   static PersonaMeta forId(String id) {
