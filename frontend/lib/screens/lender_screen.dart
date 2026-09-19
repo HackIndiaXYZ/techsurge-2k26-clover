@@ -5,6 +5,7 @@ import '../models/bureau_record.dart';
 import '../models/persona_meta.dart';
 import '../state/app_state.dart';
 import '../theme/credify_theme.dart';
+import '../widgets/authenticity_card.dart';
 import '../widgets/cashflow_chart.dart';
 import '../widgets/credify_shell_widgets.dart';
 import '../widgets/score_gauge.dart';
@@ -421,6 +422,13 @@ class _ResultView extends StatelessWidget {
             ],
           ),
         ),
+
+        // Data-pattern check. Sits directly under the score because it is a
+        // statement about the input the score was built from, but is sized to
+        // how much it actually matters: a quiet line when the pattern is
+        // normal, a full card only when something is worth looking at.
+        if (result.authenticityCheck != null)
+          AuthenticityCard(check: result.authenticityCheck!),
 
         // Affordability
         GlassCard(
