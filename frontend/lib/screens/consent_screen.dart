@@ -252,6 +252,8 @@ class _PersonaCard extends StatelessWidget {
     'ramesh_carpentry_004': '22 months · 356 transactions',
     'dormancy_gap_003': '24 months · 401 transactions',
     'thin_file_002': '4 months · 38 transactions',
+    'meera_tailor_005': '24 months · 1,916 transactions',
+    'arjun_kirana_006': '24 months · 3,927 transactions',
   };
 
   @override

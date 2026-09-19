@@ -825,6 +825,95 @@ def build_demo_profile_ramesh_carpentry() -> Profile:
     return profile
 
 
+def build_demo_profile_meera_tailor() -> Profile:
+    """Hand-tuned demo profile: a thriving tailor_salon with a clean,
+    ordinary 30-month history.
+
+    Exists for the one demo case where a traditional bureau record also
+    exists (see the frontend's simulated bureau lookup): a borrower whose
+    bureau file is thin and years out of date, but whose present-day
+    cashflow is healthy. Nothing about that bureau record lives here --
+    this is an ordinary generated profile, scored by the same model and the
+    same gate as every other. The bureau side is entirely a frontend
+    simulation, deliberately kept out of the scoring path so it cannot
+    influence a Credify score.
+    """
+    rng = random.Random(105)
+    tier = HealthTier.THRIVING
+    archetype = Archetype.TAILOR_SALON
+
+    profile = build_profile(
+        rng,
+        profile_index=0,
+        archetype=archetype,
+        tier=tier,
+        cash_heavy=False,
+        short_history=False,
+    )
+    profile.meta.profile_id = "demo_meera_tailor"
+    return profile
+
+
+def build_demo_profile_arjun_kirana() -> Profile:
+    """Hand-tuned demo profile: a kirana_store whose turnover decays steadily
+    across the whole seen window.
+
+    The mirror image of build_demo_profile_meera_tailor. Meera is the
+    credit-invisible borrower a bureau would decline; this profile is the
+    borrower a bureau would happily approve -- the frontend pairs it with a
+    healthy simulated bureau file -- while the cashflow shows the business
+    shrinking month after month. It exists to make the point that a bureau
+    score is a record of past BORROWING, reported with a lag, and says
+    nothing about whether the business can service a loan today.
+
+    The base tier is STABLE rather than STRUGGLING on purpose. A STRUGGLING
+    business is volatile, misses trading days and pays bills late, and the
+    model marks it down for all of those before the trend is even considered
+    -- which muddles the point, because a bureau would likely have noticed a
+    borrower in that state. What makes this profile interesting is that every
+    OTHER signal looks fine: income arrives in 98% of weeks, monthly income
+    varies by only ~19%, bills are mostly paid on time. The one thing wrong is
+    that turnover is shrinking, which is precisely the thing a bureau file
+    cannot show.
+
+    The -2.0%/month override supplies that decline (STABLE's own +0.2% would
+    not); across the 24-month seen window it takes monthly inflow from roughly
+    Rs 1.62L to Rs 0.77L. As with every demo builder these params are passed
+    explicitly instead of mutating the TIER_PARAMS global.
+
+    SEED CHOICE IS NOT ARBITRARY: 111 was picked by sweeping seeds and keeping
+    one that scores in the low-to-mid 20s, i.e. clearly below the book but
+    still `manual_review` rather than `high_risk_referral`. Steeper declines
+    and lower seeds score near zero, which makes the demo contrast louder but
+    reads as a strawman. The score itself is not set here and is not tunable
+    from here -- it is whatever the scorecard returns for this cashflow. What
+    is chosen is the profile, the same way every other build_demo_profile_*
+    pins a fixed seed to keep a demo fixture's identity stable.
+    """
+    rng = random.Random(111)
+    tier = HealthTier.STABLE
+    archetype = Archetype.KIRANA_STORE
+
+    demo_tier_params = dict(
+        TIER_PARAMS[tier],
+        monthly_growth=-0.020,
+        volatility=0.16,
+        missed_day_prob=0.05,
+    )
+    profile = build_profile(
+        rng,
+        profile_index=0,
+        archetype=archetype,
+        tier=tier,
+        cash_heavy=False,
+        short_history=False,
+        tier_params=demo_tier_params,
+    )
+
+    profile.meta.profile_id = "demo_arjun_kirana"
+    return profile
+
+
 def build_demo_profile_dormancy_gap() -> Profile:
     """Hand-tuned demo profile: kirana_store, failing, with one long
     (60-day) dormancy gap carved into the middle of the seen window.
@@ -918,6 +1007,8 @@ def main() -> None:
     thin_file_json = build_demo_profile_thin_file().model_dump_json(indent=2, exclude_none=False)
     ramesh_json = build_demo_profile_ramesh_carpentry().model_dump_json(indent=2, exclude_none=False)
     dormancy_json = build_demo_profile_dormancy_gap().model_dump_json(indent=2, exclude_none=False)
+    meera_json = build_demo_profile_meera_tailor().model_dump_json(indent=2, exclude_none=False)
+    arjun_json = build_demo_profile_arjun_kirana().model_dump_json(indent=2, exclude_none=False)
 
     # Demo profiles go only to data/, never out_dir: out_dir is the training
     # population build_feature_table globs, and these are hand-tuned fixtures.
@@ -927,6 +1018,8 @@ def main() -> None:
     (committed_dir / "demo_profile_thin_file.json").write_text(thin_file_json)
     (committed_dir / "demo_profile_ramesh_carpentry.json").write_text(ramesh_json)
     (committed_dir / "demo_profile_dormancy_gap.json").write_text(dormancy_json)
+    (committed_dir / "demo_profile_meera_tailor.json").write_text(meera_json)
+    (committed_dir / "demo_profile_arjun_kirana.json").write_text(arjun_json)
     if sample_profile_json is not None:
         (committed_dir / "sample_profile.json").write_text(sample_profile_json)
 

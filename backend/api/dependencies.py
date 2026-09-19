@@ -28,7 +28,7 @@ DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
 # Frontend-facing demo profile_id -> committed profile JSON file. Bridges a
 # request-shape gap: the frontend skeleton
-# (frontend/lib/services/credify_http_service.dart) hardcodes these 4 ids and
+# (frontend/lib/services/credify_http_service.dart) hardcodes these ids and
 # posts only {"profile_id": ...} to /api/analyze, not Y1's full AnalyzeRequest
 # shape. GET /api/profiles/{profile_id} (backend/api/main.py) resolves them
 # from this cache. Every file here is a dedicated, fixed-seed demo builder in
@@ -40,6 +40,8 @@ DEMO_PROFILES: dict[str, str] = {
     "thin_file_002": "demo_profile_thin_file.json",
     "dormancy_gap_003": "demo_profile_dormancy_gap.json",
     "ramesh_carpentry_004": "demo_profile_ramesh_carpentry.json",
+    "meera_tailor_005": "demo_profile_meera_tailor.json",
+    "arjun_kirana_006": "demo_profile_arjun_kirana.json",
 }
 
 _artifact: ScorecardArtifact | None = None

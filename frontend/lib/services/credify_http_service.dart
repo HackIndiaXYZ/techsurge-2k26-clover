@@ -15,9 +15,13 @@ class CredifyHttpService implements CredifyApiService {
 
   @override
   List<String> getAvailableProfileIds() {
-    // When live backend is wired up, can fetch from /api/profiles or keep known sample list
+    // Mirrors DEMO_PROFILES in backend/api/dependencies.py. Kept in sync by
+    // hand: the backend exposes no endpoint that lists demo profiles, so
+    // adding one there without adding it here leaves it unreachable from the UI.
     return const [
       'lakshmi_vendor_001',
+      'meera_tailor_005',
+      'arjun_kirana_006',
       'thin_file_002',
       'dormancy_gap_003',
       'ramesh_carpentry_004',
