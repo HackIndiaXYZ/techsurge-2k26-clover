@@ -94,6 +94,66 @@ class ScoreBreakdown {
       };
 }
 
+/// Whether an income trail looks *too* smooth to be a real business's.
+///
+/// The mirror image of the sufficiency gate: that one catches too little
+/// data, this catches data that is too clean. Backend-side it is computed
+/// after scoring is already finished and feeds neither the gate nor the
+/// model, so it never moves [AnalyzeResponse.vitalityScore], `band`,
+/// `outcome` or `confidence` — and nothing in this app should present it as
+/// if it did.
+///
+/// [status] is a prompt to look, not a verdict. A genuinely well-run
+/// business on a fixed monthly contract could sit below the floor with
+/// nothing wrong.
+///
+/// Absent (null on [AnalyzeResponse]) when the backend could not answer:
+/// either the variation is not computable at all, or there are too few
+/// monthly observations for it to mean anything. That is "cannot tell", not
+/// "passed" — never render a missing check as a clean bill of health.
+class AuthenticityCheck {
+  /// "natural" | "unusually_uniform"
+  final String status;
+
+  /// The feature this was read from, e.g. income_coefficient_of_variation.
+  final String signal;
+
+  /// The profile's actual value for [signal].
+  final double observed;
+
+  /// The calibrated floor [observed] was compared against.
+  final double floor;
+  final String note;
+
+  const AuthenticityCheck({
+    required this.status,
+    required this.signal,
+    required this.observed,
+    required this.floor,
+    required this.note,
+  });
+
+  bool get isUnusuallyUniform => status == 'unusually_uniform';
+
+  factory AuthenticityCheck.fromJson(Map<String, dynamic> json) {
+    return AuthenticityCheck(
+      status: json['status'] as String? ?? 'natural',
+      signal: json['signal'] as String? ?? '',
+      observed: (json['observed'] as num?)?.toDouble() ?? 0.0,
+      floor: (json['floor'] as num?)?.toDouble() ?? 0.0,
+      note: json['note'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'status': status,
+        'signal': signal,
+        'observed': observed,
+        'floor': floor,
+        'note': note,
+      };
+}
+
 class Affordability {
   final double indicativeEmiLow;
   final double indicativeEmiHigh;
@@ -168,6 +228,9 @@ class AnalyzeResponse {
   final ScoreBreakdown? scoreBreakdown;
   final Affordability affordability;
   final List<MonthlyCashflow> monthlyCashflow;
+
+  /// Null means the backend could not assess the pattern, NOT that it passed.
+  final AuthenticityCheck? authenticityCheck;
   final String? coverageReason;
   final String disclaimer;
 
@@ -181,6 +244,7 @@ class AnalyzeResponse {
     this.scoreBreakdown,
     required this.affordability,
     required this.monthlyCashflow,
+    this.authenticityCheck,
     this.coverageReason,
     required this.disclaimer,
   });
@@ -211,6 +275,11 @@ class AnalyzeResponse {
       monthlyCashflow: rawCashflow
           .map((e) => MonthlyCashflow.fromJson(e as Map<String, dynamic>))
           .toList(),
+      authenticityCheck: json['authenticity_check'] == null
+          ? null
+          : AuthenticityCheck.fromJson(
+              json['authenticity_check'] as Map<String, dynamic>,
+            ),
       coverageReason: json['coverage_reason'] as String?,
       disclaimer: json['disclaimer'] as String? ?? '',
     );
@@ -226,6 +295,7 @@ class AnalyzeResponse {
         'score_breakdown': scoreBreakdown?.toJson(),
         'affordability': affordability.toJson(),
         'monthly_cashflow': monthlyCashflow.map((e) => e.toJson()).toList(),
+        'authenticity_check': authenticityCheck?.toJson(),
         'coverage_reason': coverageReason,
         'disclaimer': disclaimer,
       };

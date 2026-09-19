@@ -123,16 +123,27 @@ class TestFloorIsCalibratedAgainstRealData(unittest.TestCase):
         )
 
 
+# The only demo profile that is SUPPOSED to trip the check. It does not
+# represent a real MSME -- it is a hand-built fabricated trail
+# (build_demo_profile_uniform_trail) that exists so the flag can be shown
+# firing. Listed explicitly rather than skipped by a status check, so that a
+# genuine profile drifting under the floor still fails loudly instead of
+# being quietly tolerated as "one of the expected ones".
+EXPECTED_TO_FLAG = frozenset({"uniform_trail_007"})
+
+
 class TestDemoProfilesAreNeverFlagged(unittest.TestCase):
-    """No committed demo profile may trip the check.
+    """No committed demo profile may trip the check, bar the one built to.
 
     A false positive in the live demo is the worst possible failure for this
     feature, so every demo profile is asserted individually and the failure
     message names the offender and its margin.
     """
 
-    def test_no_demo_profile_is_flagged_as_unusually_uniform(self):
+    def test_no_real_demo_profile_is_flagged_as_unusually_uniform(self):
         for profile_id, profile in _demo_profiles().items():
+            if profile_id in EXPECTED_TO_FLAG:
+                continue
             with self.subTest(profile_id=profile_id):
                 result = analyze_profile(profile, artifact=make_artifact())
                 if result.authenticity_check is None:
@@ -143,6 +154,25 @@ class TestDemoProfilesAreNeverFlagged(unittest.TestCase):
                     f"{profile_id} flagged at CV {result.authenticity_check.observed:.4f} "
                     f"against floor {_UNIFORMITY_FLOOR}",
                 )
+
+    def test_the_fabricated_profile_really_does_flag(self):
+        # The other half of the guarantee: the allowlist above must not be a
+        # place where a profile goes to stop being checked. If this profile
+        # ever stops flagging, the demo silently loses its only worked
+        # example and this fails.
+        for profile_id in EXPECTED_TO_FLAG:
+            with self.subTest(profile_id=profile_id):
+                result = analyze_profile(
+                    _demo_profiles()[profile_id], artifact=make_artifact()
+                )
+                self.assertIsNotNone(result.authenticity_check)
+                self.assertEqual(
+                    result.authenticity_check.status, "unusually_uniform"
+                )
+                # And it must still be SCORED -- the point of the demo is that
+                # a fabricated trail satisfies the model and is caught anyway.
+                self.assertEqual(result.outcome.value, "SCORED")
+                self.assertIsNotNone(result.vitality_score)
 
     def test_lakshmi_is_not_near_the_floor_despite_her_tight_generator_volatility(self):
         # build_demo_profile_lakshmi uses volatility=0.06, the tightest in the

@@ -14,6 +14,7 @@ void main() {
       'thin_file_002',
       'dormancy_gap_003',
       'ramesh_carpentry_004',
+      'uniform_trail_007',
     ]) {
       expect(
         BureauRecord.forId(id),
@@ -36,7 +37,8 @@ void main() {
 
     expect(ids, contains('meera_tailor_005'));
     expect(ids, contains('arjun_kirana_006'));
-    expect(ids.length, 6);
+    expect(ids, contains('uniform_trail_007'));
+    expect(ids.length, 7);
 
     for (final id in ids) {
       final meta = PersonaMeta.forId(id);

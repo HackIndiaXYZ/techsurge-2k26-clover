@@ -25,6 +25,7 @@ class CredifyHttpService implements CredifyApiService {
       'thin_file_002',
       'dormancy_gap_003',
       'ramesh_carpentry_004',
+      'uniform_trail_007',
     ];
   }
 
