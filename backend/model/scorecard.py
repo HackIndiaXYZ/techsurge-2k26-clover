@@ -53,6 +53,7 @@ from backend.common.windows import MonthWindow, seen_window
 from backend.contract.api_schema import (
     DISCLAIMER,
     Affordability,
+    AnalyzeAggregateRequest,
     AnalyzeResponse,
     ScoreBreakdown,
     Band,
@@ -64,7 +65,12 @@ from backend.contract.api_schema import (
 )
 from backend.model.authenticity import check_authenticity
 from backend.features.feature_engine import extract_features
-from backend.features.sufficiency import SufficiencyOutcome, assess_sufficiency
+from backend.features.sufficiency import (
+    SufficiencyOutcome,
+    SufficiencyResult,
+    assess_sufficiency,
+    assess_sufficiency_from_counts,
+)
 from backend.generator.schema import Profile
 from backend.model.artifact import (
     ARTIFACT_PATH,
@@ -169,9 +175,39 @@ def analyze_profile(
         n_income_months=len(monthly_business_income(profile.transactions_seen, window)),
     )
 
+    return _assemble_response(
+        profile_id=profile.meta.profile_id,
+        sufficiency=sufficiency,
+        feature_values=feature_values,
+        affordability=affordability,
+        monthly_cashflow=monthly_cashflow,
+        authenticity=authenticity,
+        artifact=artifact,
+    )
+
+
+def _assemble_response(
+    profile_id: str,
+    sufficiency: SufficiencyResult,
+    feature_values: dict[str, float | None],
+    affordability: Affordability,
+    monthly_cashflow: list[MonthlyCashflow],
+    authenticity,
+    artifact: ScorecardArtifact | None,
+) -> AnalyzeResponse:
+    """Gate decision + feature values -> a response, for BOTH submission paths.
+
+    Everything from here down is identical whether the features were derived
+    from transactions this server received or computed by the caller and
+    submitted as aggregates -- the model, the decomposition and the reason
+    codes have only ever needed a feature dict. Keeping this shared is what
+    makes the two paths provably equivalent rather than coincidentally
+    similar (backend/tests/test_analyze_aggregate.py asserts that byte for
+    byte on a real demo profile).
+    """
     if sufficiency.outcome != SufficiencyOutcome.FULL:
         return AnalyzeResponse(
-            profile_id=profile.meta.profile_id,
+            profile_id=profile_id,
             outcome=Outcome(sufficiency.outcome.value),
             vitality_score=None,
             band=None,
@@ -213,7 +249,7 @@ def analyze_profile(
     )
 
     return AnalyzeResponse(
-        profile_id=profile.meta.profile_id,
+        profile_id=profile_id,
         outcome=Outcome.SCORED,
         vitality_score=float(vitality_score),
         band=band,
@@ -229,4 +265,93 @@ def analyze_profile(
         authenticity_check=authenticity,
         coverage_reason=None,
         disclaimer=DISCLAIMER,
+    )
+
+
+def analyze_from_aggregates(
+    request: AnalyzeAggregateRequest, artifact: ScorecardArtifact | None = None
+) -> AnalyzeResponse:
+    """Score a caller-computed aggregate submission (POST /api/analyze-aggregate).
+
+    The privacy-minimized path: no transaction dates, amounts, counterparties
+    or channels reach this server, so there is no bank-level detail here to
+    log, cache or leak. Everything below the gate is the SAME code
+    `analyze_profile` runs -- `_assemble_response` is shared, so the model,
+    the additive decomposition and the reason codes cannot drift between the
+    two paths.
+
+    What changes is only where the three transaction-derived inputs come
+    from:
+
+    * the gate reads submitted per-month counts (`assess_sufficiency_from_counts`)
+      instead of scanning a transaction list;
+    * affordability's EMI is the median of submitted `business_income`
+      instead of `monthly_business_income(...)`;
+    * the cashflow chart uses submitted `gross_inflow`/`gross_outflow`
+      instead of `monthly_gross_cashflow(...)`.
+
+    THE TRUST BOUNDARY MOVES, AND NOT IN THE CALLER'S FAVOUR. On the
+    transaction path the server derives every feature itself, so a feature
+    cannot disagree with the data behind it. Here the caller asserts both,
+    and the server cannot recompute either from what it was given. See the
+    "Privacy architecture" section of backend/api/README.md -- this endpoint
+    minimizes what is disclosed, it does not verify what is claimed.
+    """
+    by_month = {m.month: m for m in request.months}
+
+    sufficiency = assess_sufficiency_from_counts(
+        {month: m.real_transaction_count for month, m in by_month.items()}
+    )
+
+    # model_dump() rather than a hand-written dict: the field names are
+    # FeatureSet's own, so this stays aligned with `extract_features(...)
+    # .as_dict()` without a second list of names to keep in sync.
+    feature_values: dict[str, float | None] = dict(request.features.model_dump())
+
+    business_income = {month: m.business_income for month, m in by_month.items()}
+    base_emi = indicative_emi(business_income)
+    margin = _emi_margin(feature_values.get("income_coefficient_of_variation"))
+    months_would_cover = feature_values.get("months_would_cover_emi_of_last_24")
+    affordability = Affordability(
+        indicative_emi_low=round(base_emi * (1 - margin), 2),
+        indicative_emi_high=round(base_emi * (1 + margin), 2),
+        months_would_cover_emi_of_last_24=int(months_would_cover)
+        if months_would_cover is not None
+        else 0,
+    )
+
+    monthly_cashflow = [
+        MonthlyCashflow(
+            month=month,
+            inflow=round(m.gross_inflow, 2),
+            outflow=round(m.gross_outflow, 2),
+            net=round(m.gross_inflow - m.gross_outflow, 2),
+        )
+        for month, m in sorted(by_month.items())
+    ]
+
+    # Run on EVERY aggregate request, regardless of gate outcome -- a
+    # self-reported feature is easier to fabricate than a transaction trail
+    # the server derived itself, so this is the one cross-check that still
+    # applies when the raw data is withheld.
+    #
+    # The minimum-months guard inside check_authenticity still applies, and
+    # deliberately so: it is a statistical-power limit, not a trust one. A CV
+    # computed over four months is a low-power estimate no matter who
+    # computed it, and flagging it would be a false positive rather than a
+    # fraud catch. Overriding it here would also break equivalence with
+    # /api/analyze for short windows, which is the property the tests pin.
+    authenticity = check_authenticity(
+        feature_values.get("income_coefficient_of_variation"),
+        n_income_months=len(by_month),
+    )
+
+    return _assemble_response(
+        profile_id=request.profile_id,
+        sufficiency=sufficiency,
+        feature_values=feature_values,
+        affordability=affordability,
+        monthly_cashflow=monthly_cashflow,
+        authenticity=authenticity,
+        artifact=artifact,
     )

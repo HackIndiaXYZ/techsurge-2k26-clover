@@ -89,7 +89,44 @@ def assess_sufficiency(profile: Profile) -> SufficiencyResult:
     months = window.n_months
     real_transactions = [tx for tx in profile.transactions_seen if not is_noise(tx)]
     per_month = (len(real_transactions) / months) if months > 0 else 0.0
+    return classify_sufficiency(months, per_month)
 
+
+def assess_sufficiency_from_counts(
+    real_transactions_per_month: dict[str, int],
+) -> SufficiencyResult:
+    """The same gate, for a caller who submits per-month counts instead of
+    transactions (see POST /api/analyze-aggregate).
+
+    Deliberately NOT implemented by reconstructing a Profile out of synthetic
+    transactions: that would invent dates, amounts and counterparties this
+    path exists precisely to avoid receiving, and any of those inventions
+    could drift from what the real gate measures without a test noticing.
+
+    Both entry points funnel into `classify_sufficiency`, so the thresholds
+    and the wording of `reason` have exactly one implementation. The caller's
+    counts must already exclude noise -- the server cannot tell settlement
+    sweeps from real transactions when it never sees them, which is one of
+    the trust limits documented in backend/api/README.md.
+
+    Every month of the window must be present, including months with no
+    activity at all (as a 0), matching how `iter_month_keys` yields empty
+    months. A caller that omits its silent months would otherwise report a
+    denser trail than it has.
+    """
+    months = len(real_transactions_per_month)
+    total = sum(real_transactions_per_month.values())
+    per_month = (total / months) if months > 0 else 0.0
+    return classify_sufficiency(months, per_month)
+
+
+def classify_sufficiency(months: int, per_month: float) -> SufficiencyResult:
+    """The gate's actual decision, over the two numbers it really depends on.
+
+    Split out from `assess_sufficiency` so the aggregate submission path can
+    reach the identical thresholds and the identical `reason` strings without
+    duplicating either as literals in a second place.
+    """
     thin_history = months < MIN_MONTHS_ASSESSABLE
     thin_density = per_month < MIN_TX_PER_MONTH_ASSESSABLE
     if thin_history or thin_density:
