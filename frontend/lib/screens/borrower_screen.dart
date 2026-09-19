@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/analyze_response.dart';
+import '../models/persona_meta.dart';
 import '../state/app_state.dart';
+import '../theme/credify_theme.dart';
+import '../widgets/credify_shell_widgets.dart';
 import '../widgets/score_gauge.dart';
 
 class BorrowerScreen extends StatelessWidget {
@@ -9,55 +12,48 @@ class BorrowerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
+
     return Consumer<AppState>(
       builder: (context, state, _) {
         final result = state.analyzeResult;
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Your Credify Vitality Signal',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Inter',
-                ),
+              const PageHeader(
+                pillIcon: Icons.person_outline,
+                eyebrow: 'YOUR SIGNAL',
+                title: 'Make the\nsignal visible.',
+                subtitle:
+                    "Here's what your transaction history tells a lender — "
+                    'in plain language.',
               ),
-              const SizedBox(height: 4),
-              const Text(
-                'Plain-language explanation — just for you',
-                style: TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontSize: 13,
-                  fontFamily: 'Inter',
-                ),
-              ),
-              const SizedBox(height: 20),
 
               if (!state.consentApproved)
-                _InfoCard(
+                _Notice(
                   icon: Icons.lock_outline,
-                  color: const Color(0xFFFBBF24),
+                  color: t.warning,
                   title: 'Consent not yet given',
-                  body: 'Go to the Consent tab and approve data sharing, '
-                      'then ask the lender to run the Credify check. '
-                      'Your results will appear here.',
+                  body: 'Go to the Consent tab and approve data sharing, then ask '
+                      'the lender to run the Credify check. Your results will '
+                      'appear here.',
                 )
               else if (result == null)
-                _InfoCard(
+                _Notice(
                   icon: Icons.hourglass_empty_outlined,
-                  color: const Color(0xFF60A5FA),
+                  color: t.accentA,
                   title: 'Awaiting assessment',
-                  body: 'Your data has been shared. '
-                      'The lender needs to run the Credify alternative-data check. '
-                      'Results will appear here once it\'s done.',
+                  body: 'Your data has been shared. The lender needs to run the '
+                      'Credify check — results will appear here once it is done.',
                 )
               else
-                _BorrowerResultView(result: result),
+                _BorrowerResult(
+                  result: result,
+                  profileId: state.selectedProfileId,
+                ),
             ],
           ),
         );
@@ -66,128 +62,176 @@ class BorrowerScreen extends StatelessWidget {
   }
 }
 
-class _BorrowerResultView extends StatelessWidget {
+class _BorrowerResult extends StatelessWidget {
   final AnalyzeResponse result;
-  const _BorrowerResultView({required this.result});
+  final String profileId;
+
+  const _BorrowerResult({required this.result, required this.profileId});
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
+    final meta = PersonaMeta.forId(profileId);
+
     if (result.isNotAssessable) {
-      return _NotAssessableView(result: result);
+      return Column(
+        children: [
+          _Notice(
+            icon: Icons.info_outline,
+            color: t.accentA,
+            title: "We couldn't assess your signal yet",
+            body: result.coverageReason ??
+                'There was not enough transaction history to produce a reliable '
+                    'signal. This is not a rejection — Credify refuses to guess.',
+          ),
+          const SizedBox(height: 14),
+          GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionLabel('What you can do'),
+                Text(
+                  'Keep using a bank account or UPI for your business '
+                  'transactions. The more months of digital history you build, '
+                  'the stronger the signal Credify can generate.',
+                  style: TextStyle(
+                      color: t.textSecondary, fontSize: 13, height: 1.6),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Friendly intro
-        _InfoCard(
-          icon: Icons.waving_hand_outlined,
-          color: const Color(0xFF10B981),
-          title: 'Your financial record has been assessed',
-          body: 'Credify looked at your transaction history to understand '
-              'your income patterns and financial behaviour — without a '
-              'traditional credit score.',
-        ),
-        const SizedBox(height: 20),
-
-        // Score gauge — centred
-        Center(
-          child: ScoreGauge(
-            score: result.vitalityScore ?? 0,
-            band: result.band,
-            confidence: result.confidence,
+        GlassCard(
+          margin: const EdgeInsets.only(bottom: 14),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      gradient: t.accentGradient,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(meta.icon, color: Colors.white, size: 15),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    meta.name,
+                    style: TextStyle(
+                      color: t.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ScoreGauge(
+                score: result.vitalityScore ?? 0,
+                band: result.band,
+                confidence: result.confidence,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Higher is better  ·  Scale 0 to 100',
+                style: TextStyle(color: t.textTertiary, fontSize: 11),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        const Center(
-          child: Text(
-            'Higher is better  ·  Scale: 0 to 100',
-            style: TextStyle(
-              color: Color(0xFF6B7280),
-              fontSize: 11,
-              fontFamily: 'Inter',
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
 
-        // What's helping you
-        if (result.reasonCodes.strengths.isNotEmpty) ...[
-          _SectionHeader(icon: Icons.thumb_up_alt_outlined, label: "What's helping you"),
-          const SizedBox(height: 10),
-          ...result.reasonCodes.strengths.map(
-            (s) => _PlainReasonTile(
-              text: s.statement,
-              isPositive: true,
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
-
-        // Areas to watch
-        if (result.reasonCodes.concerns.isNotEmpty) ...[
-          _SectionHeader(icon: Icons.lightbulb_outline, label: 'Areas to watch'),
-          const SizedBox(height: 10),
-          ...result.reasonCodes.concerns.map(
-            (c) => _PlainReasonTile(
-              text: c.statement,
-              isPositive: false,
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
-
-        // Actionable tip
-        _ActionableTip(result: result),
-        const SizedBox(height: 20),
-
-        // EMI range plain English
-        if (result.isScored)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1D2E),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF2D3148)),
-            ),
+        if (result.reasonCodes.strengths.isNotEmpty)
+          GlassCard(
+            margin: const EdgeInsets.only(bottom: 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'About your loan affordability',
-                  style: TextStyle(
-                    color: Color(0xFFE5E7EB),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Inter',
+                const SectionLabel("What's helping you"),
+                ...result.reasonCodes.strengths.map(
+                  (s) => _PlainPoint(text: s.statement, positive: true),
+                ),
+              ],
+            ),
+          ),
+
+        if (result.reasonCodes.concerns.isNotEmpty)
+          GlassCard(
+            margin: const EdgeInsets.only(bottom: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionLabel('Areas to watch'),
+                ...result.reasonCodes.concerns.map(
+                  (c) => _PlainPoint(text: c.statement, positive: false),
+                ),
+              ],
+            ),
+          ),
+
+        GlassCard(
+          margin: const EdgeInsets.only(bottom: 14),
+          borderColor: t.positive.withValues(alpha: 0.35),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.rocket_launch_outlined,
+                      color: t.positive, size: 17),
+                  const SizedBox(width: 8),
+                  Text(
+                    'One thing you can do to improve',
+                    style: TextStyle(
+                      color: t.positive,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _tip(result),
+                style: TextStyle(
+                    color: t.textSecondary, fontSize: 13, height: 1.6),
+              ),
+            ],
+          ),
+        ),
+
+        if (result.isScored)
+          GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionLabel('About your loan affordability'),
+                Text(
+                  'Based on your income pattern, a monthly instalment of roughly '
+                  '₹${_fmt(result.affordability.indicativeEmiLow)} to '
+                  '₹${_fmt(result.affordability.indicativeEmiHigh)} looks '
+                  'manageable. In ${result.affordability.monthsWouldCoverEmiOfLast24} '
+                  'of the last 24 months your income would have comfortably '
+                  'covered an EMI in that range.',
+                  style: TextStyle(
+                      color: t.textSecondary, fontSize: 13, height: 1.6),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Based on your income pattern, a monthly instalment (EMI) '
-                  'of roughly ₹${_fmt(result.affordability.indicativeEmiLow)} to '
-                  '₹${_fmt(result.affordability.indicativeEmiHigh)} appears manageable. '
-                  'In ${result.affordability.monthsWouldCoverEmiOfLast24} out of '
-                  'the last 24 months, your income would have comfortably covered '
-                  'an EMI in that range.',
-                  style: const TextStyle(
-                    color: Color(0xFF9CA3AF),
-                    fontSize: 13,
-                    height: 1.6,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'These are indicative estimates only. A lender will make '
-                  'the final assessment.',
+                  'Indicative estimates only. A lender makes the final assessment.',
                   style: TextStyle(
-                    color: Color(0xFF6B7280),
+                    color: t.textTertiary,
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
                     height: 1.5,
-                    fontFamily: 'Inter',
                   ),
                 ),
               ],
@@ -197,197 +241,65 @@ class _BorrowerResultView extends StatelessWidget {
     );
   }
 
-  String _fmt(double v) {
+  static String _fmt(double v) {
     if (v >= 1000) return '${(v / 1000).toStringAsFixed(0)},000';
     return v.toStringAsFixed(0);
   }
-}
 
-class _NotAssessableView extends StatelessWidget {
-  final AnalyzeResponse result;
-  const _NotAssessableView({required this.result});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _InfoCard(
-          icon: Icons.info_outline,
-          color: const Color(0xFF60A5FA),
-          title: 'We were not able to assess your signal yet',
-          body: result.coverageReason ??
-              'There was not enough transaction history to produce a reliable signal.',
-        ),
-        const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1D2E),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF2D3148)),
-          ),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '💡 What you can do',
-                style: TextStyle(
-                  color: Color(0xFFE5E7EB),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Inter',
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Continue using a bank account or UPI for your business '
-                'transactions. The more months of digital transaction history '
-                'you have, the stronger the signal that Credify can generate. '
-                'Try again after building a few more months of digital records.',
-                style: TextStyle(
-                  color: Color(0xFF9CA3AF),
-                  fontSize: 13,
-                  height: 1.6,
-                  fontFamily: 'Inter',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionableTip extends StatelessWidget {
-  final AnalyzeResponse result;
-  const _ActionableTip({required this.result});
-
-  String _tipText() {
-    // Pick the most relevant actionable suggestion based on concern features
-    final features =
-        result.reasonCodes.concerns.map((c) => c.feature).toList();
-
+  static String _tip(AnalyzeResponse result) {
+    final features = result.reasonCodes.concerns.map((c) => c.feature).toList();
     if (features.contains('buffer_days')) {
-      return 'Try to maintain a cash buffer of at least 15 days of business expenses '
-          'in your account. This strengthens the signal and shows lenders you can '
-          'handle unexpected slow months.';
+      return 'Try to keep a cash buffer of at least 15 days of business expenses '
+          'in your account. It shows lenders you can handle a slow month.';
     }
     if (features.contains('income_volatility')) {
-      return 'Smoothing out your income — for example by diversifying to smaller '
-          'orders during off-peak months — can significantly improve your signal '
-          'over the next 6 months.';
+      return 'Smoothing out your income — for example by taking smaller orders '
+          'during off-peak months — can noticeably improve your signal over the '
+          'next six months.';
     }
     if (features.contains('cash_share')) {
-      return 'Routing more of your sales through UPI or bank transfer (rather than '
-          'cash) gives Credify a clearer digital picture of your income and can '
-          'improve your next assessment.';
+      return 'Routing more sales through UPI or bank transfer rather than cash '
+          'gives Credify a clearer picture of your income.';
     }
     return 'Keep your business account active and consistent. Regular digital '
-        'transactions over the next 6–12 months will build a stronger financial '
-        'track record for future assessments.';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0D2618),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: const [
-              Icon(Icons.rocket_launch_outlined, color: Color(0xFF10B981), size: 18),
-              SizedBox(width: 8),
-              Text(
-                'One thing you can do to improve',
-                style: TextStyle(
-                  color: Color(0xFF10B981),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Inter',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _tipText(),
-            style: const TextStyle(
-              color: Color(0xFFD1D5DB),
-              fontSize: 13,
-              height: 1.6,
-              fontFamily: 'Inter',
-            ),
-          ),
-        ],
-      ),
-    );
+        'transactions over the next 6–12 months build a stronger record.';
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _SectionHeader({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: const Color(0xFF6366F1)),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFFE5E7EB),
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Inter',
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PlainReasonTile extends StatelessWidget {
+class _PlainPoint extends StatelessWidget {
   final String text;
-  final bool isPositive;
-  const _PlainReasonTile({required this.text, required this.isPositive});
+  final bool positive;
+
+  const _PlainPoint({required this.text, required this.positive});
 
   @override
   Widget build(BuildContext context) {
-    final color = isPositive ? const Color(0xFF4ADE80) : const Color(0xFFFBBF24);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
-      ),
+    final t = context.tokens;
+    final color = positive ? t.positive : t.warning;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(isPositive ? '✓ ' : '• ', style: TextStyle(color: color, fontSize: 14)),
-          const SizedBox(width: 4),
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(7),
+            ),
+            child: Icon(
+              positive ? Icons.check : Icons.priority_high,
+              size: 13,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: Color(0xFFD1D5DB),
-                fontSize: 13,
-                height: 1.4,
-                fontFamily: 'Inter',
-              ),
+              style: TextStyle(
+                  color: t.textSecondary, fontSize: 13, height: 1.5),
             ),
           ),
         ],
@@ -396,13 +308,13 @@ class _PlainReasonTile extends StatelessWidget {
   }
 }
 
-class _InfoCard extends StatelessWidget {
+class _Notice extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String title;
   final String body;
 
-  const _InfoCard({
+  const _Notice({
     required this.icon,
     required this.color,
     required this.title,
@@ -411,20 +323,15 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
-      ),
+    final t = context.tokens;
+    return GlassCard(
+      borderColor: color.withValues(alpha: 0.35),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 20),
+              Icon(icon, color: color, size: 19),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -432,8 +339,7 @@ class _InfoCard extends StatelessWidget {
                   style: TextStyle(
                     color: color,
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -442,12 +348,8 @@ class _InfoCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             body,
-            style: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 13,
-              height: 1.5,
-              fontFamily: 'Inter',
-            ),
+            style:
+                TextStyle(color: t.textSecondary, fontSize: 13, height: 1.5),
           ),
         ],
       ),

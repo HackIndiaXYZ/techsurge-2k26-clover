@@ -1,20 +1,36 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../models/portfolio_response.dart';
+import '../theme/credify_theme.dart';
 
 class ScoreHistogramChart extends StatelessWidget {
   final List<ScoreBucket> buckets;
-  const ScoreHistogramChart({super.key, required this.buckets});
+
+  /// When set, buckets at or above this score render as "would approve" and
+  /// the rest are dimmed. Null leaves every bar at full strength.
+  final int? cutoff;
+
+  const ScoreHistogramChart({
+    super.key,
+    required this.buckets,
+    this.cutoff,
+  });
+
+  /// Lower bound of a "60-70" style bucket label.
+  static int lowerBound(String bucket) =>
+      int.tryParse(bucket.split('-').first.trim()) ?? 0;
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
+
     if (buckets.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 160,
         child: Center(
           child: Text(
             'No histogram data',
-            style: TextStyle(color: Color(0xFF6B7280)),
+            style: TextStyle(color: t.textTertiary),
           ),
         ),
       );
@@ -30,10 +46,8 @@ class ScoreHistogramChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (_) => FlLine(
-              color: const Color(0xFF2D3148),
-              strokeWidth: 1,
-            ),
+            getDrawingHorizontalLine: (_) =>
+                FlLine(color: t.hairline, strokeWidth: 1),
           ),
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
@@ -43,11 +57,7 @@ class ScoreHistogramChart extends StatelessWidget {
                 reservedSize: 32,
                 getTitlesWidget: (val, meta) => Text(
                   val.toInt().toString(),
-                  style: const TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 10,
-                    fontFamily: 'Inter',
-                  ),
+                  style: TextStyle(color: t.textTertiary, fontSize: 10),
                 ),
               ),
             ),
@@ -62,11 +72,7 @@ class ScoreHistogramChart extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
                       buckets[idx].bucket,
-                      style: const TextStyle(
-                        color: Color(0xFF9CA3AF),
-                        fontSize: 10,
-                        fontFamily: 'Inter',
-                      ),
+                      style: TextStyle(color: t.textSecondary, fontSize: 10),
                     ),
                   );
                 },
@@ -81,11 +87,16 @@ class ScoreHistogramChart extends StatelessWidget {
             final b = entry.value;
             // Color gradient: low scores red → high scores green
             final fraction = idx / (buckets.length - 1);
-            final color = Color.lerp(
+            var color = Color.lerp(
               const Color(0xFFF87171),
               const Color(0xFF4ADE80),
               fraction,
             )!;
+            // Below the lender's cutoff, dim the bar rather than recolour it —
+            // the band it belongs to has not changed, only the policy.
+            if (cutoff != null && lowerBound(b.bucket) < cutoff!) {
+              color = color.withValues(alpha: 0.22);
+            }
             return BarChartGroupData(
               x: idx,
               barRods: [
@@ -100,15 +111,11 @@ class ScoreHistogramChart extends StatelessWidget {
           }).toList(),
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
-              getTooltipColor: (_) => const Color(0xFF2D3148),
+              getTooltipColor: (_) => t.textPrimary,
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
                   '${buckets[group.x].bucket}\n${rod.toY.toInt()} profiles',
-                  const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontFamily: 'Inter',
-                  ),
+                  TextStyle(color: t.bg, fontSize: 12),
                 );
               },
             ),

@@ -1,20 +1,25 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'mock_backend.dart';
 import 'services/credify_api_service.dart';
 import 'services/credify_http_service.dart';
 import 'state/app_state.dart';
+import 'theme/credify_theme.dart';
 import 'screens/lender_screen.dart';
 import 'screens/consent_screen.dart';
 import 'screens/portfolio_screen.dart';
 import 'screens/borrower_screen.dart';
-import 'widgets/disclaimer_banner.dart';
+import 'screens/landing_screen.dart';
+import 'widgets/credify_shell_widgets.dart';
 
 // Live FastAPI backend by default. Run with --dart-define=CREDIFY_USE_MOCK=true
 // to use the in-memory MockBackend instead, and --dart-define=CREDIFY_API_URL=...
 // to point at a server other than http://localhost:8000.
 const bool _useMock = bool.fromEnvironment('CREDIFY_USE_MOCK');
-const String _kBaseUrl = String.fromEnvironment('CREDIFY_API_URL', defaultValue: 'http://localhost:8000');
+const String _kBaseUrl =
+    String.fromEnvironment('CREDIFY_API_URL', defaultValue: 'http://localhost:8000');
 
 void main() {
   final CredifyApiService service =
@@ -23,55 +28,41 @@ void main() {
   runApp(CredifyApp(service: service));
 }
 
-class CredifyApp extends StatelessWidget {
+class CredifyApp extends StatefulWidget {
   final CredifyApiService service;
   const CredifyApp({super.key, required this.service});
 
   @override
+  State<CredifyApp> createState() => _CredifyAppState();
+}
+
+class _CredifyAppState extends State<CredifyApp> {
+  bool _isDark = true;
+  bool _entered = false;
+
+  void _toggleTheme() => setState(() => _isDark = !_isDark);
+
+  @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AppState(service),
+      create: (_) => AppState(widget.service),
       child: MaterialApp(
         title: 'Credify — Alternative Credit Signal',
         debugShowCheckedModeBanner: false,
-        theme: _buildTheme(),
-        home: CredifyShell(service: service),
-      ),
-    );
-  }
-
-  ThemeData _buildTheme() {
-    return ThemeData(
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: const Color(0xFF0F1117),
-      colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF6366F1),
-        secondary: Color(0xFF10B981),
-        surface: Color(0xFF1A1D2E),
-        onSurface: Color(0xFFE5E7EB),
-      ),
-      fontFamily: 'Inter',
-      textTheme: const TextTheme(
-        bodyMedium: TextStyle(color: Color(0xFFD1D5DB), fontFamily: 'Inter'),
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF12141F),
-        elevation: 0,
-        titleTextStyle: TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          fontFamily: 'Inter',
-        ),
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Color(0xFF12141F),
-        selectedItemColor: Color(0xFF6366F1),
-        unselectedItemColor: Color(0xFF6B7280),
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: TextStyle(fontSize: 11, fontFamily: 'Inter'),
-        unselectedLabelStyle: TextStyle(fontSize: 11, fontFamily: 'Inter'),
+        theme: CredifyTheme.light,
+        darkTheme: CredifyTheme.dark,
+        themeMode: _isDark ? ThemeMode.dark : ThemeMode.light,
+        home: _entered
+            ? CredifyShell(
+                service: widget.service,
+                isDark: _isDark,
+                onToggleTheme: _toggleTheme,
+              )
+            : LandingScreen(
+                isDark: _isDark,
+                onToggleTheme: _toggleTheme,
+                onEnter: () => setState(() => _entered = true),
+              ),
       ),
     );
   }
@@ -79,132 +70,268 @@ class CredifyApp extends StatelessWidget {
 
 class CredifyShell extends StatefulWidget {
   final CredifyApiService service;
-  const CredifyShell({super.key, required this.service});
+  final bool isDark;
+  final VoidCallback onToggleTheme;
+
+  const CredifyShell({
+    super.key,
+    required this.service,
+    required this.isDark,
+    required this.onToggleTheme,
+  });
 
   @override
   State<CredifyShell> createState() => _CredifyShellState();
 }
 
 class _CredifyShellState extends State<CredifyShell> {
+  // Tab order: 0 = Consent, 1 = Lender, 2 = Borrower, 3 = Portfolio
   int _tabIndex = 0;
 
-  // Tab order:
-  // 0 = Consent, 1 = Lender, 2 = Borrower, 3 = Portfolio
-  static const List<BottomNavigationBarItem> _navItems = [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.verified_user_outlined),
-      activeIcon: Icon(Icons.verified_user),
-      label: 'Consent',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.account_balance_outlined),
-      activeIcon: Icon(Icons.account_balance),
-      label: 'Lender',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person_outline),
-      activeIcon: Icon(Icons.person),
-      label: 'Borrower',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.bar_chart_outlined),
-      activeIcon: Icon(Icons.bar_chart),
-      label: 'Portfolio',
-    ),
-  ];
-
-  // Screen titles kept for reference; displayed in AppBar via tab label only.
-  // (removed as unused field — each screen has its own heading)
+  void goToTab(int index) => setState(() => _tabIndex = index);
 
   @override
   Widget build(BuildContext context) {
-    // The disclaimer text is pulled from the mock (or live) data.
-    // For startup we show the standard fixed text; once a result is loaded
-    // the exact API disclaimer is displayed via the analyzeResult.
-    const disclaimer =
-        'Research prototype on synthetic data. Not a lending decision system. '
-        'Decision-support signal only — final lending decision rests with the lender.';
+    final t = context.tokens;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6366F1), Color(0xFF10B981)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.eco, size: 16, color: Colors.white),
-            ),
-            const SizedBox(width: 10),
-            const Text('Credify'),
-            const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEF4444).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: const Color(0xFFEF4444).withValues(alpha: 0.3),
-                ),
-              ),
-              child: const Text(
-                'PROTOTYPE',
-                style: TextStyle(
-                  color: Color(0xFFEF4444),
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                  fontFamily: 'Inter',
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: const Text(
-                'PS-F02',
-                style: TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontSize: 11,
-                  fontFamily: 'Inter',
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: Column(
+      body: Stack(
         children: [
-          // Persistent disclaimer banner — visible on every screen
-          const DisclaimerBanner(text: disclaimer),
-          // Page body
-          Expanded(
-            child: IndexedStack(
-              index: _tabIndex,
+          const Positioned.fill(child: AmbientBackground()),
+          SafeArea(
+            bottom: false,
+            child: Column(
               children: [
-                const ConsentScreen(),
-                const LenderScreen(),
-                const BorrowerScreen(),
-                PortfolioScreen(service: widget.service),
+                _TopBar(
+                  isDark: widget.isDark,
+                  onToggleTheme: widget.onToggleTheme,
+                ),
+                const _DisclaimerStrip(),
+                Expanded(
+                  child: IndexedStack(
+                    index: _tabIndex,
+                    children: [
+                      ConsentScreen(onContinue: () => goToTab(1)),
+                      const LenderScreen(),
+                      const BorrowerScreen(),
+                      PortfolioScreen(service: widget.service),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 18,
+            child: Center(
+              child: _GlassNavBar(
+                index: _tabIndex,
+                onSelect: goToTab,
+                tokens: t,
+              ),
+            ),
+          ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _tabIndex,
-        onTap: (i) => setState(() => _tabIndex = i),
-        items: _navItems,
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  final bool isDark;
+  final VoidCallback onToggleTheme;
+
+  const _TopBar({required this.isDark, required this.onToggleTheme});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      child: Row(
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              gradient: t.accentGradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.eco_rounded, size: 14, color: Colors.white),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'CREDIFY',
+            style: TextStyle(
+              color: t.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: t.negative.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: t.negative.withValues(alpha: 0.3)),
+            ),
+            child: Text(
+              'PROTOTYPE',
+              style: TextStyle(
+                color: t.negative,
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          const Spacer(),
+          ThemeTogglePill(isDark: isDark, onToggle: onToggleTheme),
+        ],
+      ),
+    );
+  }
+}
+
+class _DisclaimerStrip extends StatelessWidget {
+  const _DisclaimerStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, size: 13, color: t.warning),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Research prototype on synthetic data. Not a lending decision '
+              'system, not a regulated entity — the final lending decision '
+              'rests with the lender.',
+              style: TextStyle(
+                color: t.textTertiary,
+                fontSize: 10.5,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GlassNavBar extends StatelessWidget {
+  final int index;
+  final ValueChanged<int> onSelect;
+  final CredifyTokens tokens;
+
+  const _GlassNavBar({
+    required this.index,
+    required this.onSelect,
+    required this.tokens,
+  });
+
+  static const _items = [
+    (Icons.verified_user_outlined, Icons.verified_user, 'Consent'),
+    (Icons.account_balance_outlined, Icons.account_balance, 'Lender'),
+    (Icons.person_outline, Icons.person, 'Borrower'),
+    (Icons.bar_chart_outlined, Icons.bar_chart, 'Portfolio'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width - 32;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          width: width > 440 ? 440 : width,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: tokens.navFill,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: tokens.glassBorder, width: 1),
+          ),
+          child: Row(
+            children: [
+              for (var i = 0; i < _items.length; i++)
+                Expanded(
+                  child: _NavItem(
+                    icon: i == index ? _items[i].$2 : _items[i].$1,
+                    label: _items[i].$3,
+                    active: i == index,
+                    tokens: tokens,
+                    onTap: () => onSelect(i),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool active;
+  final CredifyTokens tokens;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.tokens,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: active
+                ? tokens.accentA.withValues(alpha: 0.14)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: active ? tokens.textPrimary : tokens.textTertiary,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: TextStyle(
+                  color: active ? tokens.textPrimary : tokens.textTertiary,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

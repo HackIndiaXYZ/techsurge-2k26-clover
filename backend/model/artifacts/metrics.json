@@ -1,6 +1,6 @@
 {
-  "validated_at": "2026-09-18T12:10:57.524425+00:00",
-  "artifact_trained_at": "2026-09-18T12:10:52.257769+00:00",
+  "validated_at": "2026-09-18T15:27:31.582906+00:00",
+  "artifact_trained_at": "2026-09-18T15:27:05.750740+00:00",
   "train_seed": 42,
   "n_train": 379,
   "n_test": 127,
@@ -84,15 +84,15 @@
     "months_would_cover_emi_of_last_24": 368
   },
   "feature_coefficients": {
-    "pct_weeks_with_income": -0.2530764972687195,
-    "income_coefficient_of_variation": -0.12339869475438708,
-    "longest_dry_streak_days": 0.08009081968047708,
-    "trend_last_6_months": 0.435417475475723,
-    "year_over_year_change": 0.2405224068228048,
-    "expense_to_income_ratio": -0.7309158189404595,
+    "pct_weeks_with_income": -0.25307649726871945,
+    "income_coefficient_of_variation": -0.12339869475438713,
+    "longest_dry_streak_days": 0.080090819680477,
+    "trend_last_6_months": 0.4354174754757229,
+    "year_over_year_change": 0.24052240682280493,
+    "expense_to_income_ratio": -0.7309158189404596,
     "ontime_bill_payment_rate": 0.7403107572371587,
-    "cash_buffer_days": 0.22492000322628752,
-    "worst_monthly_dip_pct": 0.7134638544629583,
+    "cash_buffer_days": 0.22492000322628758,
+    "worst_monthly_dip_pct": 0.7134638544629585,
     "months_would_cover_emi_of_last_24": 1.1924630112132588
   },
   "stability_check_12_vs_24_months": {

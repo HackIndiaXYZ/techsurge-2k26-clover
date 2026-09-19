@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import '../theme/credify_theme.dart';
 
 class ScoreGauge extends StatelessWidget {
   final double score; // 0–100
@@ -68,18 +69,17 @@ class ScoreGauge extends StatelessWidget {
                   fontFamily: 'Inter',
                 ),
               ),
-              const Text(
+              Text(
                 'Vitality Signal',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Color(0xFF9CA3AF),
-                  fontFamily: 'Inter',
+                  color: context.tokens.textSecondary,
                 ),
               ),
             ],
           ),
           progressColor: color,
-          backgroundColor: const Color(0xFF2D3148),
+          backgroundColor: context.tokens.hairline,
           circularStrokeCap: CircularStrokeCap.round,
         ),
         const SizedBox(height: 16),

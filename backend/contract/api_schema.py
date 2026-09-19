@@ -61,6 +61,25 @@ class ReasonCodes(BaseModel):
     concerns: list[ReasonCode] = Field(default_factory=list)
 
 
+class ScoreBreakdown(BaseModel):
+    """The exact additive decomposition behind a SCORED result.
+
+    The model is linear, so `intercept + sum(contributions.values())` equals
+    `logit` exactly -- no approximation step (unlike SHAP over a tree model).
+    That additivity holds in LOG-ODDS SPACE ONLY. vitality_score is a
+    percentile rank of p_default against a frozen reference cohort, which is
+    monotonic but not linear, so these contributions must never be presented
+    as "points added to the score".
+
+    Optional and additive: older clients that ignore this field are unaffected.
+    """
+
+    intercept: float
+    contributions: dict[str, float]
+    logit: float
+    p_default: float
+
+
 class Affordability(BaseModel):
     indicative_emi_low: float
     indicative_emi_high: float
@@ -81,6 +100,10 @@ class AnalyzeResponse(BaseModel):
     band: Optional[Band] = None
     confidence: Optional[Confidence] = None
     reason_codes: ReasonCodes
+    score_breakdown: Optional[ScoreBreakdown] = Field(
+        default=None,
+        description="Populated only for SCORED outcomes; absent when there is no score to decompose.",
+    )
     affordability: Affordability
     monthly_cashflow: list[MonthlyCashflow]
     coverage_reason: Optional[str] = Field(

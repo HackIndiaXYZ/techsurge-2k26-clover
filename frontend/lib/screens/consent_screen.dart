@@ -1,325 +1,426 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../models/persona_meta.dart';
 import '../state/app_state.dart';
+import '../theme/credify_theme.dart';
+import '../widgets/credify_shell_widgets.dart';
 
+/// First screen after the landing: pick an MSME profile, then authorise the
+/// simulated Account Aggregator consent by sliding.
 class ConsentScreen extends StatelessWidget {
-  const ConsentScreen({super.key});
+  /// Jumps the shell to the Lender tab once consent is granted.
+  final VoidCallback onContinue;
 
-  // Simulated / illustrative institution names — NOT real institutions
-  static const String _fipName = 'Sahyadri Gramin Co-op Bank [Simulated — illustrative only]';
-  static const String _aaName = 'Setu-AA Gateway [Simulated — illustrative only]';
-  static const String _purpose =
-      'Credify will access 24 months of transaction history '
-      'to compute an alternative credit-worthiness signal '
-      'for lender evaluation only. No data is shared with '
-      'third parties outside this session.';
-  static const String _dateRange = 'March 2023 – February 2025 (24 months)';
+  const ConsentScreen({super.key, required this.onContinue});
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
+
     return Consumer<AppState>(
       builder: (context, state, _) {
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
-                'Account Aggregator Consent',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Inter',
+              Center(
+                child: HeroPill(
+                  icon: Icons.insights_rounded,
+                  label: '24-MONTH CASH-FLOW ANALYSIS',
                 ),
               ),
-              const SizedBox(height: 4),
-              const Text(
-                'Simulated AA flow — illustrative only',
+              const SizedBox(height: 18),
+              Text(
+                'Credit invisible.\nCash flow real.',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontSize: 12,
-                  fontFamily: 'Inter',
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Profile selector
-              _SectionCard(
-                title: 'Select Borrower Profile',
-                icon: Icons.person_outline,
-                child: DropdownButtonFormField<String>(
-                  initialValue: state.selectedProfileId,
-                  dropdownColor: const Color(0xFF1A1D2E),
-                  style: const TextStyle(
-                    color: Color(0xFFE5E7EB),
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                  ),
-                  decoration: InputDecoration(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF2D3148)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF6366F1)),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFF12141F),
-                  ),
-                  items: state.availableProfileIds.map((id) {
-                    return DropdownMenuItem(
-                      value: id,
-                      child: Text(id),
-                    );
-                  }).toList(),
-                  onChanged: state.consentApproved
-                      ? null
-                      : (val) {
-                          if (val != null) state.selectProfile(val);
-                        },
+                  color: t.textPrimary,
+                  fontSize: 34,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1.4,
+                  height: 1.12,
                 ),
               ),
               const SizedBox(height: 14),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: Text(
+                  'Account Aggregator transaction history turned into an '
+                  'explainable credit signal for MSMEs with no bureau file — '
+                  'decision support for a lender, never an automatic approval.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: t.textSecondary,
+                    fontSize: 14.5,
+                    height: 1.55,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
 
-              // Consent card
-              _SectionCard(
-                title: 'Consent Request Details',
-                icon: Icons.assignment_outlined,
+              Align(
+                alignment: Alignment.centerLeft,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _ConsentRow(label: 'Financial Information Provider', value: _fipName),
-                    const SizedBox(height: 10),
-                    _ConsentRow(label: 'Account Aggregator', value: _aaName),
-                    const SizedBox(height: 10),
-                    _ConsentRow(label: 'Data Range Requested', value: _dateRange),
-                    const SizedBox(height: 10),
-                    _ConsentRow(label: 'Purpose', value: _purpose),
-                    const SizedBox(height: 14),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0F1521),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFF1E3A5F), width: 1),
+                    Text(
+                      'PICK A BORROWER · NO LOGIN',
+                      style: TextStyle(
+                        color: t.accentA,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
                       ),
-                      child: const Text(
-                        '⚠ This is a simulated Account Aggregator flow. '
-                        'The institution names above are entirely fictitious and '
-                        'used for demonstration purposes only.',
-                        style: TextStyle(
-                          color: Color(0xFF60A5FA),
-                          fontSize: 11,
-                          height: 1.5,
-                          fontFamily: 'Inter',
-                        ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Demo MSME profiles',
+                      style: TextStyle(
+                        color: t.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
 
-              // Consent action
-              if (!state.consentApproved)
-                SizedBox(
-                  width: double.infinity,
-                  child: state.consentLoading
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Column(
-                              children: [
-                                CircularProgressIndicator(color: Color(0xFF10B981)),
-                                SizedBox(height: 12),
-                                Text(
-                                  'Establishing secure data flow…',
-                                  style: TextStyle(
-                                    color: Color(0xFF9CA3AF),
-                                    fontSize: 13,
-                                    fontFamily: 'Inter',
-                                  ),
+              // Wide screens spread the profiles across the full width; narrow
+              // ones keep them as a swipeable rail.
+              SizedBox(
+                height: 208,
+                child: MediaQuery.of(context).size.width >= 820
+                    ? Row(
+                        children: [
+                          for (
+                            var i = 0;
+                            i < state.availableProfileIds.length;
+                            i++
+                          ) ...[
+                            if (i > 0) const SizedBox(width: 14),
+                            Expanded(
+                              child: _PersonaCard(
+                                profileId: state.availableProfileIds[i],
+                                selected:
+                                    state.availableProfileIds[i] ==
+                                    state.selectedProfileId,
+                                onTap: () => _openConsentSheet(
+                                  context,
+                                  state,
+                                  state.availableProfileIds[i],
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        )
-                      : ElevatedButton.icon(
-                          onPressed: () => state.approveConsent(),
-                          icon: const Icon(Icons.verified_user_outlined),
-                          label: const Text('Approve Consent & Share Data'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          ],
+                        ],
+                      )
+                    : ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        clipBehavior: Clip.none,
+                        itemCount: state.availableProfileIds.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 14),
+                        itemBuilder: (context, i) {
+                          final id = state.availableProfileIds[i];
+                          return SizedBox(
+                            width: 212,
+                            child: _PersonaCard(
+                              profileId: id,
+                              selected: id == state.selectedProfileId,
+                              onTap: () =>
+                                  _openConsentSheet(context, state, id),
                             ),
-                            textStyle: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Inter',
-                            ),
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(height: 24),
+
+              GlassCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: StatTile(value: '521', caption: 'Profiles scored'),
+                    ),
+                    _divider(t),
+                    const Expanded(
+                      child: StatTile(value: '0.96', caption: 'Model AUC'),
+                    ),
+                    _divider(t),
+                    const Expanded(
+                      child: StatTile(
+                        value: '10',
+                        caption: 'Predictive features',
+                      ),
+                    ),
+                    _divider(t),
+                    const Expanded(
+                      child: StatTile(
+                        value: 'Synthetic',
+                        caption: 'Data source',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (state.consentApproved) ...[
+                const SizedBox(height: 22),
+                GlassCard(
+                  borderColor: t.positive.withValues(alpha: 0.45),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline,
+                        color: t.positive,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Consent granted for '
+                          '${PersonaMeta.forId(state.selectedProfileId).name}.',
+                          style: TextStyle(
+                            color: t.positive,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                )
-              else
-                _ConsentGrantedBadge(
-                  profileId: state.selectedProfileId,
-                  onRevoke: () => state.revokeConsent(),
+                      ),
+                      TextButton(
+                        onPressed: state.revokeConsent,
+                        style: TextButton.styleFrom(
+                          foregroundColor: t.negative,
+                        ),
+                        child: const Text('Revoke'),
+                      ),
+                    ],
+                  ),
                 ),
+              ],
             ],
           ),
         );
       },
     );
   }
+
+  Widget _divider(CredifyTokens t) =>
+      Container(width: 1, height: 26, color: t.hairline);
+
+  void _openConsentSheet(BuildContext context, AppState state, String id) {
+    state.selectProfile(id);
+    final meta = PersonaMeta.forId(id);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => _ConsentSheet(
+        personaName: meta.name,
+        onAuthorized: () async {
+          await state.approveConsent();
+          if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+          onContinue();
+        },
+      ),
+    );
+  }
 }
 
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Widget child;
+class _PersonaCard extends StatelessWidget {
+  final String profileId;
+  final bool selected;
+  final VoidCallback onTap;
 
-  const _SectionCard({
-    required this.title,
-    required this.icon,
-    required this.child,
+  const _PersonaCard({
+    required this.profileId,
+    required this.selected,
+    required this.onTap,
   });
+
+  /// Data coverage only — the score and outcome stay hidden until the lender
+  /// actually runs the check, so the reveal is not spoiled here.
+  static const _coverage = <String, String>{
+    'lakshmi_vendor_001': '24 months · 612 transactions',
+    'ramesh_carpentry_004': '22 months · 356 transactions',
+    'dormancy_gap_003': '24 months · 401 transactions',
+    'thin_file_002': '4 months · 38 transactions',
+  };
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    final t = context.tokens;
+    final meta = PersonaMeta.forId(profileId);
+    final coverage = _coverage[profileId] ?? 'Demo profile';
+
+    return GlassCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1D2E),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF2D3148), width: 1),
-      ),
+      onTap: onTap,
+      borderColor: selected ? t.accentA.withValues(alpha: 0.6) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            'DATA COVERAGE',
+            style: TextStyle(
+              color: t.textTertiary,
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            coverage,
+            style: TextStyle(
+              color: t.textPrimary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
           Row(
             children: [
-              Icon(icon, color: const Color(0xFF6366F1), size: 18),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Color(0xFFE5E7EB),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Inter',
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: t.accentA.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(meta.icon, size: 15, color: t.accentA),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      meta.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: t.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      meta.sector,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: t.textSecondary, fontSize: 10),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _ConsentRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _ConsentRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF6B7280),
-            fontSize: 11,
-            fontFamily: 'Inter',
-          ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Color(0xFFD1D5DB),
-            fontSize: 13,
-            height: 1.4,
-            fontFamily: 'Inter',
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ConsentGrantedBadge extends StatelessWidget {
-  final String profileId;
-  final VoidCallback onRevoke;
-
-  const _ConsentGrantedBadge({
-    required this.profileId,
-    required this.onRevoke,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0D2618),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF10B981), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+          const SizedBox(height: 11),
           Row(
-            children: const [
-              Icon(Icons.check_circle_outline, color: Color(0xFF10B981), size: 22),
-              SizedBox(width: 10),
-              Text(
-                'Consent Granted',
-                style: TextStyle(
-                  color: Color(0xFF10B981),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Inter',
+            children: [
+              Expanded(
+                child: Text(
+                  'Run cash-flow check',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: t.accentA,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
+              Icon(Icons.chevron_right, size: 15, color: t.accentA),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Data for profile "$profileId" is now available for lender assessment. '
-            'Navigate to the Lender tab to run the Credify check.',
-            style: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 13,
-              height: 1.5,
-              fontFamily: 'Inter',
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextButton.icon(
-            onPressed: onRevoke,
-            icon: const Icon(Icons.cancel_outlined, size: 16),
-            label: const Text('Revoke Consent'),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFEF4444),
-              padding: EdgeInsets.zero,
-            ),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _ConsentSheet extends StatelessWidget {
+  final String personaName;
+  final VoidCallback onAuthorized;
+
+  const _ConsentSheet({required this.personaName, required this.onAuthorized});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: t.bg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(34)),
+        border: Border(top: BorderSide(color: t.glassBorder)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: t.textTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.shield_outlined, size: 16, color: t.accentA),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'SIMULATED ACCOUNT AGGREGATOR CONSENT',
+                    style: TextStyle(
+                      color: t.accentA,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Share 24 months of transaction history for $personaName?',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: t.textPrimary,
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Simulated AA flow on synthetic data · read-only · '
+              'nothing leaves this session',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: t.textSecondary, fontSize: 12),
+            ),
+            const SizedBox(height: 24),
+            SlideToAuthorize(
+              label: 'Slide to authorise',
+              doneLabel: 'Consent granted',
+              onAuthorized: onAuthorized,
+            ),
+          ],
+        ),
       ),
     );
   }
