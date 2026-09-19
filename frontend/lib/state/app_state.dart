@@ -10,13 +10,22 @@ class AppState extends ChangeNotifier {
   AppState(this.service);
 
   // ── Selected profile ─────────────────────────────────────────────────────
+  // A borrower has to be SOMEONE before the user picks, or every screen that
+  // reads this would need a null branch. So the id is defaulted but
+  // [hasPickedProfile] stays false until the user actually chooses, and the
+  // consent rail highlights nothing until then -- a pre-lit card reads as
+  // "we have already decided for you", which is the opposite of the point.
   String _selectedProfileId = 'lakshmi_vendor_001';
   String get selectedProfileId => _selectedProfileId;
+
+  bool _hasPickedProfile = false;
+  bool get hasPickedProfile => _hasPickedProfile;
 
   List<String> get availableProfileIds => service.getAvailableProfileIds();
 
   void selectProfile(String id) {
     _selectedProfileId = id;
+    _hasPickedProfile = true;
     // Reset flow so the new profile goes through bureau check again
     _lenderStep = LenderStep.idle;
     _analyzeResult = null;

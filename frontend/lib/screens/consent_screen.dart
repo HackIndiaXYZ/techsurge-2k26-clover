@@ -116,8 +116,9 @@ class ConsentScreen extends StatelessWidget {
                               child: _PersonaCard(
                                 profileId: state.availableProfileIds[i],
                                 selected:
+                                    state.hasPickedProfile &&
                                     state.availableProfileIds[i] ==
-                                    state.selectedProfileId,
+                                        state.selectedProfileId,
                                 onTap: () => _openConsentSheet(
                                   context,
                                   state,
@@ -140,7 +141,8 @@ class ConsentScreen extends StatelessWidget {
                             width: 212,
                             child: _PersonaCard(
                               profileId: id,
-                              selected: id == state.selectedProfileId,
+                              selected: state.hasPickedProfile &&
+                                  id == state.selectedProfileId,
                               onTap: () =>
                                   _openConsentSheet(context, state, id),
                             ),
@@ -287,10 +289,34 @@ class _PersonaCard extends StatelessWidget {
     final meta = PersonaMeta.forId(profileId);
     final coverage = _coverage[profileId] ?? 'Demo profile';
 
+    // Unlike the landing pillars, these ARE tap targets, so the hover is an
+    // affordance and GlassCard's own InkWell supplies the pointer cursor and
+    // ripple. A selected card stays lit whether or not the pointer is on it,
+    // and hovering it does not dim it back down.
+    return HoverLift(
+      lift: 5,
+      builder: (context, hovered) => _card(context, t, meta, coverage, hovered),
+    );
+  }
+
+  Widget _card(
+    BuildContext context,
+    CredifyTokens t,
+    PersonaMeta meta,
+    String coverage,
+    bool hovered,
+  ) {
+    final Color? border = selected
+        ? t.accentA.withValues(alpha: 0.6)
+        : hovered
+            ? t.accentA.withValues(alpha: 0.38)
+            : null;
+
     return GlassCard(
       padding: const EdgeInsets.all(16),
       onTap: onTap,
-      borderColor: selected ? t.accentA.withValues(alpha: 0.6) : null,
+      borderColor: border,
+      transitionDuration: const Duration(milliseconds: 200),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -315,11 +341,15 @@ class _PersonaCard extends StatelessWidget {
           const Spacer(),
           Row(
             children: [
-              Container(
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: t.accentA.withValues(alpha: 0.18),
+                  color: t.accentA.withValues(
+                    alpha: (hovered || selected) ? 0.30 : 0.18,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(meta.icon, size: 15, color: t.accentA),
@@ -365,7 +395,13 @@ class _PersonaCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right, size: 15, color: t.accentA),
+              // Nudges toward the direction the card takes you.
+              AnimatedSlide(
+                offset: Offset(hovered ? 0.22 : 0, 0),
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                child: Icon(Icons.chevron_right, size: 15, color: t.accentA),
+              ),
             ],
           ),
         ],
