@@ -62,6 +62,7 @@ from backend.contract.api_schema import (
     ReasonCode,
     ReasonCodes,
 )
+from backend.model.authenticity import check_authenticity
 from backend.features.feature_engine import extract_features
 from backend.features.sufficiency import SufficiencyOutcome, assess_sufficiency
 from backend.generator.schema import Profile
@@ -158,6 +159,16 @@ def analyze_profile(
     affordability = _affordability_block(profile, window, feature_values)
     monthly_cashflow = _monthly_cashflow_block(profile, window)
 
+    # Annotation only -- computed from features that are already extracted,
+    # consulted by nothing above, and attached to whichever response is built
+    # below. Deliberately independent of the gate outcome: a LOW_CONFIDENCE
+    # trail can still be long enough for its smoothness to be worth flagging,
+    # and flagging it changes no other field either way.
+    authenticity = check_authenticity(
+        feature_values.get("income_coefficient_of_variation"),
+        n_income_months=len(monthly_business_income(profile.transactions_seen, window)),
+    )
+
     if sufficiency.outcome != SufficiencyOutcome.FULL:
         return AnalyzeResponse(
             profile_id=profile.meta.profile_id,
@@ -168,6 +179,7 @@ def analyze_profile(
             reason_codes=ReasonCodes(strengths=[], concerns=[]),
             affordability=affordability,
             monthly_cashflow=monthly_cashflow,
+            authenticity_check=authenticity,
             coverage_reason=sufficiency.reason,
             disclaimer=DISCLAIMER,
         )
@@ -214,6 +226,7 @@ def analyze_profile(
         score_breakdown=score_breakdown,
         affordability=affordability,
         monthly_cashflow=monthly_cashflow,
+        authenticity_check=authenticity,
         coverage_reason=None,
         disclaimer=DISCLAIMER,
     )
