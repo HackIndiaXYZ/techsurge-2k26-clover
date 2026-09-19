@@ -12,6 +12,7 @@ import 'screens/consent_screen.dart';
 import 'screens/portfolio_screen.dart';
 import 'screens/borrower_screen.dart';
 import 'screens/landing_screen.dart';
+import 'widgets/credify_mark.dart';
 import 'widgets/credify_shell_widgets.dart';
 
 // Live FastAPI backend by default. Run with --dart-define=CREDIFY_USE_MOCK=true
@@ -159,7 +160,7 @@ class _TopBar extends StatelessWidget {
               gradient: t.accentGradient,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.eco_rounded, size: 14, color: Colors.white),
+            child: const Center(child: CredifyMark(size: 17)),
           ),
           const SizedBox(width: 10),
           Text(

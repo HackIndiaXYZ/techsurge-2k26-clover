@@ -1,13 +1,12 @@
 {
-    "name": "credify_frontend",
-    "short_name": "credify_frontend",
+    "name": "Credify — Alternative Credit Signal",
+    "short_name": "Credify",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
-    "prefer_related_applications": false,
+    "background_color": "#000000",
+    "theme_color": "#C084FC",
+    "description": "Alternative-data credit scoring for MSMEs with no bureau file. Research prototype on synthetic data.",
+        "prefer_related_applications": false,
     "icons": [
         {
             "src": "icons/Icon-192.png",
