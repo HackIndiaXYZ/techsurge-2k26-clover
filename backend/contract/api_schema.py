@@ -10,7 +10,7 @@ request/response types.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -80,6 +80,31 @@ class ScoreBreakdown(BaseModel):
     p_default: float
 
 
+class AuthenticityCheck(BaseModel):
+    """Whether an income trail looks *too* smooth to be a real business's.
+
+    The mirror image of the sufficiency gate: that one catches too LITTLE
+    data, this one catches data that is too CLEAN. Real income carries
+    seasonality and bad months; a fabricated or templated trail usually does
+    not.
+
+    Purely an annotation. It is computed after scoring is already finished
+    and never feeds the gate or the model, so it cannot move vitality_score,
+    band, outcome or confidence. `status` is a prompt to look, not a verdict:
+    a genuinely well-run business on a fixed monthly contract could sit below
+    the floor without anything being wrong.
+
+    Optional and additive: older clients that ignore this field are
+    unaffected.
+    """
+
+    status: Literal["natural", "unusually_uniform"]
+    signal: str
+    observed: float
+    floor: float
+    note: str
+
+
 class Affordability(BaseModel):
     indicative_emi_low: float
     indicative_emi_high: float
@@ -106,6 +131,16 @@ class AnalyzeResponse(BaseModel):
     )
     affordability: Affordability
     monthly_cashflow: list[MonthlyCashflow]
+    authenticity_check: Optional[AuthenticityCheck] = Field(
+        default=None,
+        description=(
+            "Populated only when income_coefficient_of_variation is computable "
+            "AND there are enough monthly income observations for it to mean "
+            "anything; absent otherwise, since a short trail's CV cannot "
+            "distinguish a fabricated business from a young one. Independent "
+            "of `outcome` -- an annotation, not a gate."
+        ),
+    )
     coverage_reason: Optional[str] = Field(
         default=None,
         description="Populated only for LOW_CONFIDENCE / NOT_ASSESSABLE outcomes.",
