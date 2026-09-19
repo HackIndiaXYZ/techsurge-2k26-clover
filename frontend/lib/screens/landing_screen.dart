@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/credify_theme.dart';
+import '../widgets/credify_mark.dart';
 import '../widgets/credify_shell_widgets.dart';
 import '../widgets/signal_waveform.dart';
 
@@ -221,7 +222,7 @@ class _NavBar extends StatelessWidget {
             gradient: t.accentGradient,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.eco_rounded, size: 17, color: Colors.white),
+          child: const Center(child: CredifyMark(size: 21)),
         ),
         const SizedBox(width: 10),
         Text(
