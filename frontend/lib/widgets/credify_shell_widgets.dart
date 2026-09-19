@@ -61,6 +61,84 @@ class _Orb extends StatelessWidget {
 }
 
 /// Frosted panel — the single glass material used across the app.
+/// Lifts and glows whatever it wraps while the pointer is over it.
+///
+/// The [builder] receives the hover state so each caller decides what else
+/// changes — a border colour, an icon tint — instead of this trying to guess.
+///
+/// The lift is an [AnimatedSlide], a PAINT-time transform, deliberately not
+/// padding or margin: these cards live in IntrinsicHeight rows with
+/// CrossAxisAlignment.stretch, where anything that changes a card's laid-out
+/// size would resize its neighbours on every hover.
+///
+/// Honours the OS reduce-motion setting: whatever the builder does with
+/// colour still happens, the movement does not.
+class HoverLift extends StatefulWidget {
+  final Widget Function(BuildContext context, bool hovered) builder;
+
+  /// Logical pixels to rise. Converted to a fraction of the child's height,
+  /// so a tall card and a short one move by a comparable-looking amount.
+  final double lift;
+
+  /// Whether to cast an accent glow beneath the raised card.
+  final bool glow;
+
+  const HoverLift({
+    super.key,
+    required this.builder,
+    this.lift = 6.0,
+    this.glow = true,
+  });
+
+  @override
+  State<HoverLift> createState() => _HoverLiftState();
+}
+
+class _HoverLiftState extends State<HoverLift> {
+  bool _hovered = false;
+
+  /// Quick enough to feel attached to the pointer. The 480ms used elsewhere
+  /// is the theme crossfade, which is a different kind of motion and would
+  /// feel sluggish tracking a cursor.
+  static const _duration = Duration(milliseconds: 200);
+  static const _curve = Curves.easeOutCubic;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    final rise = (_hovered && !reduceMotion) ? -widget.lift : 0.0;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedSlide(
+        offset: Offset(0, rise / 100),
+        duration: _duration,
+        curve: _curve,
+        child: AnimatedContainer(
+          duration: _duration,
+          curve: _curve,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: (_hovered && widget.glow)
+                ? [
+                    BoxShadow(
+                      color: t.accentA.withValues(alpha: 0.22),
+                      blurRadius: 28,
+                      spreadRadius: -6,
+                      offset: const Offset(0, 12),
+                    ),
+                  ]
+                : const [],
+          ),
+          child: widget.builder(context, _hovered),
+        ),
+      ),
+    );
+  }
+}
+
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;

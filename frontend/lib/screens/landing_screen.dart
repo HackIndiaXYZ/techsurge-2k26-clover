@@ -594,125 +594,70 @@ class _Pillars extends StatelessWidget {
   }
 }
 
-/// Hover state is the card's own, so the three cards light independently.
+/// Hover reads as depth, not affordance: these cards are not tap targets, so
+/// the cursor stays an arrow and there is no ripple. Promising a click they
+/// do not honour would be worse than no hover at all.
 ///
-/// Nothing here is a tap target, so the hover reads as depth rather than
-/// affordance: the card lifts and its edge catches the accent, but the
-/// cursor stays an arrow and there is no ripple. Promising a click these
-/// cards do not honour would be worse than no hover at all.
-class _PillarCard extends StatefulWidget {
+/// Each card owns its own hover state, so the three light independently.
+class _PillarCard extends StatelessWidget {
   final (IconData, String, String, String) item;
   const _PillarCard({required this.item});
 
   @override
-  State<_PillarCard> createState() => _PillarCardState();
-}
-
-class _PillarCardState extends State<_PillarCard> {
-  bool _hovered = false;
-
-  /// Quick enough to feel attached to the pointer. The 480ms elsewhere is the
-  /// theme crossfade, which is a different kind of motion and would feel
-  /// sluggish tracking a cursor.
-  static const _duration = Duration(milliseconds: 200);
-  static const _curve = Curves.easeOutCubic;
-
-  @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    final item = widget.item;
-
-    // Honour the OS "reduce motion" setting: the colour shift still lands,
-    // the movement does not.
-    final reduceMotion = MediaQuery.of(context).disableAnimations;
-    final lift = (_hovered && !reduceMotion) ? -6.0 : 0.0;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedSlide(
-        // Fractional, so it scales with the card instead of being a fixed
-        // pixel nudge that reads differently on a tall mobile card.
-        offset: Offset(0, lift / 100),
-        duration: _duration,
-        curve: _curve,
-        child: AnimatedContainer(
-          duration: _duration,
-          curve: _curve,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: _hovered
-                ? [
-                    BoxShadow(
-                      color: t.accentA.withValues(alpha: 0.22),
-                      blurRadius: 28,
-                      spreadRadius: -6,
-                      offset: const Offset(0, 12),
+    return HoverLift(
+      builder: (context, hovered) => GlassCard(
+        padding: const EdgeInsets.all(22),
+        borderColor: hovered ? t.accentA.withValues(alpha: 0.42) : null,
+        transitionDuration: const Duration(milliseconds: 200),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: t.accentA.withValues(alpha: hovered ? 0.26 : 0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(item.$1, color: t.accentA, size: 19),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              item.$2,
+              style: TextStyle(
+                fontSize: 15.5,
+                fontWeight: FontWeight.w700,
+                color: t.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              item.$3,
+              style: TextStyle(
+                  fontSize: 12.5, color: t.textSecondary, height: 1.55),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    item.$4,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: t.accentA,
                     ),
-                  ]
-                : const [],
-          ),
-          child: _card(context, t, item),
-        ),
-      ),
-    );
-  }
-
-  Widget _card(
-    BuildContext context,
-    CredifyTokens t,
-    (IconData, String, String, String) item,
-  ) {
-    return GlassCard(
-      padding: const EdgeInsets.all(22),
-      borderColor: _hovered ? t.accentA.withValues(alpha: 0.42) : null,
-      transitionDuration: _duration,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AnimatedContainer(
-            duration: _duration,
-            curve: _curve,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: t.accentA.withValues(alpha: _hovered ? 0.26 : 0.14),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(item.$1, color: t.accentA, size: 19),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            item.$2,
-            style: TextStyle(
-              fontSize: 15.5,
-              fontWeight: FontWeight.w700,
-              color: t.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            item.$3,
-            style: TextStyle(
-                fontSize: 12.5, color: t.textSecondary, height: 1.55),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  item.$4,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: t.accentA,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
