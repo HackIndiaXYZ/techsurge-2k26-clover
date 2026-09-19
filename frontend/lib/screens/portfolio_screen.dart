@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../mock_backend.dart';
 import '../models/portfolio_response.dart';
 import '../services/credify_api_service.dart';
+import '../theme/credify_theme.dart';
+import '../widgets/credify_shell_widgets.dart';
 import '../widgets/score_histogram_chart.dart';
 
 class PortfolioScreen extends StatefulWidget {
@@ -30,11 +32,13 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     });
     try {
       final result = await widget.service.getPortfolio();
+      if (!mounted) return;
       setState(() {
         _data = result;
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
@@ -44,45 +48,82 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Portfolio Overview',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Inter',
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            widget.service is MockBackend
-                ? 'Aggregate signal metrics — ILLUSTRATIVE PLACEHOLDER data (mock backend).'
-                : 'Aggregate signal metrics — live from the Credify backend.',
-            style: const TextStyle(
-              color: Color(0xFF6B7280),
-              fontSize: 12,
-              fontFamily: 'Inter',
-            ),
-          ),
-          const SizedBox(height: 20),
+    final t = context.tokens;
+    final isMock = widget.service is MockBackend;
 
-          if (_loading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(40),
-                child: CircularProgressIndicator(color: Color(0xFF6366F1)),
-              ),
-            )
-          else if (_error != null)
-            _ErrorCard(message: _error!)
-          else if (_data != null)
-            _PortfolioBody(data: _data!, onRefresh: _load),
-        ],
+    return RefreshIndicator(
+      onRefresh: _load,
+      color: t.accentA,
+      backgroundColor: t.bg,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            PageHeader(
+              pillIcon: Icons.bar_chart_outlined,
+              eyebrow: 'LENDER PORTFOLIO',
+              title: 'Portfolio,\nin focus.',
+              subtitle: isMock
+                  ? 'Aggregate signal metrics — illustrative placeholder data '
+                      '(mock backend).'
+                  : 'Aggregate signal metrics across the credit-invisible book, '
+                      'live from the Credify backend.',
+            ),
+
+            if (_loading)
+              GlassCard(
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: t.accentA),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Loading portfolio metrics…',
+                      style: TextStyle(color: t.textSecondary, fontSize: 13),
+                    ),
+                  ],
+                ),
+              )
+            else if (_error != null)
+              GlassCard(
+                borderColor: t.negative.withValues(alpha: 0.4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Could not load the portfolio',
+                      style: TextStyle(
+                        color: t.negative,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      style:
+                          TextStyle(color: t.textSecondary, fontSize: 12.5),
+                    ),
+                    const SizedBox(height: 14),
+                    CredifyButton(
+                      label: 'Retry',
+                      icon: Icons.refresh,
+                      ghost: true,
+                      onPressed: _load,
+                    ),
+                  ],
+                ),
+              )
+            else if (_data != null)
+              _PortfolioBody(data: _data!),
+          ],
+        ),
       ),
     );
   }
@@ -90,141 +131,189 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
 
 class _PortfolioBody extends StatelessWidget {
   final PortfolioResponse data;
-  final VoidCallback onRefresh;
-
-  const _PortfolioBody({required this.data, required this.onRefresh});
+  const _PortfolioBody({required this.data});
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
+    final bands = data.bandDistribution;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Key metrics row
         Row(
           children: [
             Expanded(
-              child: _MetricTile(
-                label: 'Profiles Assessed',
+              child: _MetricCard(
                 value: data.nProfiles.toString(),
-                icon: Icons.people_outline,
-                color: const Color(0xFF6366F1),
+                label: 'ASSESSED',
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
-              child: _MetricTile(
-                label: 'Coverage',
-                value: '${data.coveragePct.toStringAsFixed(1)}%',
-                icon: Icons.verified_outlined,
-                color: const Color(0xFF10B981),
+              child: _MetricCard(
+                value: '${data.coveragePct.toStringAsFixed(0)}%',
+                label: 'COVERAGE',
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
-              child: _MetricTile(
-                label: 'Model AUC',
-                value: data.auc != null ? data.auc!.toStringAsFixed(3) : '—',
-                icon: Icons.show_chart,
-                color: const Color(0xFF60A5FA),
+              child: _MetricCard(
+                value: data.auc == null
+                    ? '—'
+                    : data.auc!.toStringAsFixed(2),
+                label: 'MODEL AUC',
               ),
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 22),
 
-        // Band distribution
-        _Card(
-          title: 'Band Distribution',
-          icon: Icons.donut_small_outlined,
+        const SectionLabel('Band distribution'),
+        GlassCard(
+          margin: const EdgeInsets.only(bottom: 22),
           child: Column(
             children: [
-              _BandBar(
-                label: 'Strong Candidate',
-                count: data.bandDistribution.strongCandidate,
+              _BandRow(
+                label: 'Strong candidate',
+                count: bands.strongCandidate,
                 total: data.nProfiles,
-                color: const Color(0xFF4ADE80),
+                color: t.positive,
               ),
-              const SizedBox(height: 10),
-              _BandBar(
-                label: 'Refer for Manual Review',
-                count: data.bandDistribution.manualReview,
+              const SizedBox(height: 14),
+              _BandRow(
+                label: 'Manual review',
+                count: bands.manualReview,
                 total: data.nProfiles,
-                color: const Color(0xFFFBBF24),
+                color: t.warning,
               ),
-              const SizedBox(height: 10),
-              _BandBar(
-                label: 'High-Risk Referral',
-                count: data.bandDistribution.highRiskReferral,
+              const SizedBox(height: 14),
+              _BandRow(
+                label: 'High-risk referral',
+                count: bands.highRiskReferral,
                 total: data.nProfiles,
-                color: const Color(0xFFF87171),
+                color: t.negative,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
 
-        // Score histogram
-        _Card(
-          title: 'Score Distribution (0–100)',
-          icon: Icons.bar_chart,
-          child: ScoreHistogramChart(buckets: data.scoreHistogram),
-        ),
-        const SizedBox(height: 16),
-
-        TextButton.icon(
-          onPressed: onRefresh,
-          icon: const Icon(Icons.refresh, size: 16),
-          label: const Text('Refresh'),
-          style: TextButton.styleFrom(foregroundColor: const Color(0xFF9CA3AF)),
-        ),
+        const SectionLabel('Lending policy'),
+        _CutoffExplorer(data: data),
       ],
     );
   }
 }
 
-class _MetricTile extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
+/// Lets a lender drag their own score cutoff and see how much of the book it
+/// would let through. Credify supplies the signal; the policy stays theirs.
+class _CutoffExplorer extends StatefulWidget {
+  final PortfolioResponse data;
+  const _CutoffExplorer({required this.data});
 
-  const _MetricTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
+  @override
+  State<_CutoffExplorer> createState() => _CutoffExplorerState();
+}
+
+class _CutoffExplorerState extends State<_CutoffExplorer> {
+  // Snapped to the histogram's own 10-point buckets: interpolating inside a
+  // bucket would invent a within-bucket distribution the data does not have.
+  int _cutoff = 60;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
-      ),
+    final t = context.tokens;
+    final buckets = widget.data.scoreHistogram;
+
+    final approved = buckets
+        .where((b) => ScoreHistogramChart.lowerBound(b.bucket) >= _cutoff)
+        .fold<int>(0, (sum, b) => sum + b.count);
+    final scoredTotal = buckets.fold<int>(0, (sum, b) => sum + b.count);
+    final belowCutoff = scoredTotal - approved;
+    final pct = scoredTotal == 0 ? 0.0 : approved / scoredTotal * 100;
+
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              fontFamily: 'Inter',
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Approve at or above',
+                  style: TextStyle(
+                    color: t.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                '$_cutoff',
+                style: TextStyle(
+                  color: t.accentA,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              Text(
+                ' / 100',
+                style: TextStyle(color: t.textTertiary, fontSize: 12),
+              ),
+            ],
+          ),
+          Slider(
+            value: _cutoff.toDouble(),
+            min: 0,
+            max: 100,
+            divisions: 10,
+            activeColor: t.accentA,
+            inactiveColor: t.hairline,
+            label: '$_cutoff',
+            onChanged: (v) => setState(() => _cutoff = v.round()),
           ),
           const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: _PolicyStat(
+                  value: '$approved',
+                  caption: 'would pass',
+                  color: t.positive,
+                ),
+              ),
+              Expanded(
+                child: _PolicyStat(
+                  value: '$belowCutoff',
+                  caption: 'below cutoff',
+                  color: t.warning,
+                ),
+              ),
+              Expanded(
+                child: _PolicyStat(
+                  value: '${pct.toStringAsFixed(0)}%',
+                  caption: 'of scored book',
+                  color: t.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          ScoreHistogramChart(
+            buckets: buckets,
+            cutoff: _cutoff,
+          ),
+          const SizedBox(height: 12),
           Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF9CA3AF),
+            'Volume only. Bad rate at each cutoff needs per-bucket repayment '
+            'outcomes from the holdout, which this prototype does not expose — '
+            'so this shows how many borrowers a policy lets through, not how '
+            'many would default.',
+            style: TextStyle(
+              color: t.textTertiary,
               fontSize: 11,
-              fontFamily: 'Inter',
+              height: 1.5,
             ),
           ),
         ],
@@ -233,13 +322,83 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
-class _BandBar extends StatelessWidget {
+class _PolicyStat extends StatelessWidget {
+  final String value;
+  final String caption;
+  final Color color;
+
+  const _PolicyStat({
+    required this.value,
+    required this.caption,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          caption,
+          style: TextStyle(color: t.textSecondary, fontSize: 10.5),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _MetricCard({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: t.textPrimary,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(color: t.textSecondary, fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BandRow extends StatelessWidget {
   final String label;
   final int count;
   final int total;
   final Color color;
 
-  const _BandBar({
+  const _BandRow({
     required this.label,
     required this.count,
     required this.total,
@@ -248,7 +407,9 @@ class _BandBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = total > 0 ? count / total : 0.0;
+    final t = context.tokens;
+    final fraction = total == 0 ? 0.0 : (count / total).clamp(0.0, 1.0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -257,98 +418,33 @@ class _BandBar extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFFD1D5DB),
-                fontSize: 12,
-                fontFamily: 'Inter',
+              style: TextStyle(
+                color: t.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
             ),
             Text(
-              '$count (${(pct * 100).toStringAsFixed(1)}%)',
+              '$count  ·  ${(fraction * 100).toStringAsFixed(0)}%',
               style: TextStyle(
                 color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Inter',
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(3),
           child: LinearProgressIndicator(
-            value: pct.toDouble(),
-            backgroundColor: const Color(0xFF2D3148),
+            value: fraction,
+            minHeight: 5,
+            backgroundColor: t.hairline,
             valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 6,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Card extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Widget child;
-
-  const _Card({required this.title, required this.icon, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1D2E),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF2D3148), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: const Color(0xFF6366F1), size: 18),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Color(0xFFE5E7EB),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Inter',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorCard extends StatelessWidget {
-  final String message;
-  const _ErrorCard({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2D1515),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.4)),
-      ),
-      child: Text(
-        'Error loading portfolio: $message',
-        style: const TextStyle(color: Color(0xFFFCA5A5), fontSize: 13),
-      ),
     );
   }
 }

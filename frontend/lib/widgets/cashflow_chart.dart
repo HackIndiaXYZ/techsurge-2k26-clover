@@ -1,20 +1,27 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../models/analyze_response.dart';
+import '../theme/credify_theme.dart';
 
 class CashflowChart extends StatelessWidget {
   final List<MonthlyCashflow> data;
   const CashflowChart({super.key, required this.data});
 
+  static const _inflow = Color(0xFF4ADE80);
+  static const _outflow = Color(0xFFF87171);
+  static const _net = Color(0xFF60A5FA);
+
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
+
     if (data.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 180,
         child: Center(
           child: Text(
             'No cashflow data available',
-            style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+            style: TextStyle(color: t.textTertiary, fontSize: 13),
           ),
         ),
       );
@@ -36,37 +43,31 @@ class CashflowChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Monthly Cashflow (₹ thousands)',
-          style: TextStyle(
-            color: Color(0xFF9CA3AF),
-            fontSize: 12,
-            fontFamily: 'Inter',
-          ),
+        Text(
+          'Monthly cashflow (₹ thousands)',
+          style: TextStyle(color: t.textSecondary, fontSize: 12),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Row(
           children: [
-            _legend(const Color(0xFF4ADE80), 'Inflow'),
+            _legend(_inflow, 'Inflow', t),
             const SizedBox(width: 16),
-            _legend(const Color(0xFFF87171), 'Outflow'),
+            _legend(_outflow, 'Outflow', t),
             const SizedBox(width: 16),
-            _legend(const Color(0xFF60A5FA), 'Net'),
+            _legend(_net, 'Net', t),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         SizedBox(
           height: 200,
           child: LineChart(
             LineChartData(
-              backgroundColor: const Color(0xFF1A1D2E),
+              backgroundColor: Colors.transparent,
               gridData: FlGridData(
                 show: true,
                 drawVerticalLine: false,
-                getDrawingHorizontalLine: (_) => FlLine(
-                  color: const Color(0xFF2D3148),
-                  strokeWidth: 1,
-                ),
+                getDrawingHorizontalLine: (_) =>
+                    FlLine(color: t.hairline, strokeWidth: 1),
               ),
               borderData: FlBorderData(show: false),
               titlesData: FlTitlesData(
@@ -76,11 +77,7 @@ class CashflowChart extends StatelessWidget {
                     reservedSize: 36,
                     getTitlesWidget: (val, meta) => Text(
                       '${val.toInt()}k',
-                      style: const TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontSize: 10,
-                        fontFamily: 'Inter',
-                      ),
+                      style: TextStyle(color: t.textTertiary, fontSize: 10),
                     ),
                   ),
                 ),
@@ -93,43 +90,35 @@ class CashflowChart extends StatelessWidget {
                       final idx = val.toInt();
                       if (idx < 0 || idx >= data.length) return const SizedBox();
                       final parts = data[idx].month.split('-');
-                      final label = parts.length == 2 ? '${parts[1]}/${parts[0].substring(2)}' : data[idx].month;
+                      final label = parts.length == 2
+                          ? '${parts[1]}/${parts[0].substring(2)}'
+                          : data[idx].month;
                       return Text(
                         label,
-                        style: const TextStyle(
-                          color: Color(0xFF6B7280),
-                          fontSize: 9,
-                          fontFamily: 'Inter',
-                        ),
+                        style: TextStyle(color: t.textTertiary, fontSize: 9),
                       );
                     },
                   ),
                 ),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               lineBarsData: [
-                _line(spots['inflow']!, const Color(0xFF4ADE80)),
-                _line(spots['outflow']!, const Color(0xFFF87171)),
-                _line(spots['net']!, const Color(0xFF60A5FA), isDashed: true),
+                _line(spots['inflow']!, _inflow),
+                _line(spots['outflow']!, _outflow),
+                _line(spots['net']!, _net, isDashed: true),
               ],
               lineTouchData: LineTouchData(
                 touchTooltipData: LineTouchTooltipData(
-                  getTooltipColor: (_) => const Color(0xFF2D3148),
-                  getTooltipItems: (spots) => spots.map((s) {
-                    final labels = ['Inflow', 'Outflow', 'Net'];
-                    final colors = [
-                      const Color(0xFF4ADE80),
-                      const Color(0xFFF87171),
-                      const Color(0xFF60A5FA),
-                    ];
+                  getTooltipColor: (_) => t.textPrimary,
+                  getTooltipItems: (touched) => touched.map((s) {
+                    const labels = ['Inflow', 'Outflow', 'Net'];
+                    const colors = [_inflow, _outflow, _net];
                     return LineTooltipItem(
                       '${labels[s.barIndex]}: ₹${(s.y * 1000).toStringAsFixed(0)}',
-                      TextStyle(
-                        color: colors[s.barIndex],
-                        fontSize: 11,
-                        fontFamily: 'Inter',
-                      ),
+                      TextStyle(color: colors[s.barIndex], fontSize: 11),
                     );
                   }).toList(),
                 ),
@@ -141,7 +130,8 @@ class CashflowChart extends StatelessWidget {
     );
   }
 
-  LineChartBarData _line(List<FlSpot> spots, Color color, {bool isDashed = false}) {
+  LineChartBarData _line(List<FlSpot> spots, Color color,
+      {bool isDashed = false}) {
     return LineChartBarData(
       spots: spots,
       isCurved: true,
@@ -154,7 +144,7 @@ class CashflowChart extends StatelessWidget {
     );
   }
 
-  Widget _legend(Color color, String label) {
+  Widget _legend(Color color, String label, CredifyTokens t) {
     return Row(
       children: [
         Container(
@@ -165,14 +155,10 @@ class CashflowChart extends StatelessWidget {
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(
-            color: Color(0xFF9CA3AF),
-            fontSize: 11,
-            fontFamily: 'Inter',
-          ),
+          style: TextStyle(color: t.textSecondary, fontSize: 11),
         ),
       ],
     );

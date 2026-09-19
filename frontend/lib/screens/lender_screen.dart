@@ -1,125 +1,221 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/analyze_response.dart';
+import '../models/persona_meta.dart';
 import '../state/app_state.dart';
-import '../widgets/score_gauge.dart';
+import '../theme/credify_theme.dart';
 import '../widgets/cashflow_chart.dart';
+import '../widgets/credify_shell_widgets.dart';
+import '../widgets/score_gauge.dart';
+import '../widgets/score_waterfall.dart';
 
 class LenderScreen extends StatelessWidget {
   const LenderScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
+
     return Consumer<AppState>(
       builder: (context, state, _) {
+        final meta = PersonaMeta.forId(state.selectedProfileId);
+        final step = state.lenderStep;
+
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionHeader('Lender Assessment Panel'),
-              const SizedBox(height: 4),
-              Text(
-                'Profile: ${state.selectedProfileId}',
-                style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+              const PageHeader(
+                pillIcon: Icons.account_balance_outlined,
+                eyebrow: 'FOR LENDERS',
+                title: 'A clearer\nway to look.',
+                subtitle:
+                    'Move from a blank bureau file to a full view of business '
+                    'cash-flow — with reasons a credit team can actually discuss.',
               ),
-              const SizedBox(height: 20),
 
-              // ── Step 1: Traditional bureau check ────────────────────────
-              _StepCard(
-                stepNumber: '1',
-                title: 'Traditional Bureau Check',
-                child: state.lenderStep == LenderStep.idle
-                    ? SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: state.consentApproved
-                              ? () => state.runBureauCheck()
-                              : null,
-                          icon: const Icon(Icons.search),
-                          label: const Text('Run Bureau Check'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6366F1),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+              // Selected borrower
+              GlassCard(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        gradient: t.accentGradient,
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                      child: Icon(meta.icon, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            meta.name,
+                            style: TextStyle(
+                              color: t.textPrimary,
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ),
-                      )
-                    : _BureauDeadEndCard(),
+                          const SizedBox(height: 3),
+                          Text(
+                            meta.sector,
+                            style: TextStyle(
+                                color: t.textSecondary, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
-              if (!state.consentApproved && state.lenderStep == LenderStep.idle)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Row(
+              // ── Step 1: traditional bureau ──────────────────────────────
+              if (step == LenderStep.idle)
+                GlassCard(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.lock_outline, size: 14, color: Color(0xFFFBBF24)),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Awaiting borrower consent — go to Consent tab first.',
-                        style: TextStyle(color: Color(0xFFFBBF24), fontSize: 12),
+                      const SectionLabel('Step 1 — traditional bureau'),
+                      CredifyButton(
+                        label: 'Run bureau check',
+                        icon: Icons.search,
+                        ghost: true,
+                        onPressed: state.consentApproved
+                            ? state.runBureauCheck
+                            : null,
+                      ),
+                      if (!state.consentApproved) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(Icons.lock_outline,
+                                size: 14, color: t.warning),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Awaiting borrower consent — visit the Consent tab first.',
+                                style: TextStyle(
+                                    color: t.warning, fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                )
+              else
+                GlassCard(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  borderColor: t.negative.withValues(alpha: 0.4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: t.negative,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'NO BUREAU FILE FOUND',
+                            style: TextStyle(
+                              color: t.negative,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'This borrower is credit invisible — no bureau record '
+                        'exists, so traditional scoring cannot proceed. This is '
+                        'exactly the gap Credify closes.',
+                        style: TextStyle(
+                          color: t.textSecondary,
+                          fontSize: 12.5,
+                          height: 1.5,
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-              const SizedBox(height: 16),
-
-              // ── Step 2: Credify alternative-data check ────────────────────
-              if (state.lenderStep == LenderStep.bureauChecked ||
-                  state.lenderStep == LenderStep.credifying ||
-                  state.lenderStep == LenderStep.done)
-                _StepCard(
-                  stepNumber: '2',
-                  title: 'Credify Alternative-Data Check',
-                  child: state.lenderStep == LenderStep.bureauChecked
-                      ? SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () => state.runCredifyAnalysis(),
-                            icon: const Icon(Icons.auto_awesome),
-                            label: const Text('Run Credify Alternative-Data Check'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF10B981),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                        )
-                      : state.analyzeLoading
-                          ? const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(24),
-                                child: CircularProgressIndicator(
-                                  color: Color(0xFF10B981),
-                                ),
-                              ),
-                            )
-                          : state.analyzeError != null
-                              ? _ErrorCard(message: state.analyzeError!)
-                              : state.analyzeResult != null
-                                  ? _CredifyResultView(result: state.analyzeResult!)
-                                  : const SizedBox(),
-                ),
-
-              if (state.lenderStep == LenderStep.done)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: TextButton.icon(
-                    onPressed: () => state.resetLenderFlow(),
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: const Text('Run Another Check'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF9CA3AF),
-                    ),
+              // ── Step 2: Credify signal ──────────────────────────────────
+              if (step == LenderStep.bureauChecked)
+                GlassCard(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SectionLabel('Step 2 — Credify signal'),
+                      CredifyButton(
+                        label: 'Run Credify check',
+                        icon: Icons.auto_awesome,
+                        onPressed: state.runCredifyAnalysis,
+                      ),
+                    ],
                   ),
                 ),
+
+              if (state.analyzeLoading)
+                GlassCard(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: t.accentA),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Scoring cash-flow behaviour…',
+                        style:
+                            TextStyle(color: t.textSecondary, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+
+              if (state.analyzeError != null)
+                GlassCard(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  borderColor: t.negative.withValues(alpha: 0.4),
+                  child: Text(
+                    'Error: ${state.analyzeError}',
+                    style: TextStyle(color: t.negative, fontSize: 13),
+                  ),
+                ),
+
+              if (state.analyzeResult != null && !state.analyzeLoading)
+                _ResultView(result: state.analyzeResult!),
+
+              if (step == LenderStep.done) ...[
+                const SizedBox(height: 6),
+                TextButton.icon(
+                  onPressed: state.resetLenderFlow,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Run another check'),
+                  style: TextButton.styleFrom(foregroundColor: t.textSecondary),
+                ),
+              ],
             ],
           ),
         );
@@ -128,489 +224,292 @@ class LenderScreen extends StatelessWidget {
   }
 }
 
-// ── Bureau dead-end card (the core storytelling beat) ─────────────────────
-class _BureauDeadEndCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2D1515),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEF4444), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: const [
-              Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444), size: 22),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'No credit history found',
-                  style: TextStyle(
-                    color: Color(0xFFEF4444),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Unable to score with a traditional bureau check.',
-            style: TextStyle(
-              color: Color(0xFFFCA5A5),
-              fontSize: 14,
-              fontFamily: 'Inter',
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'This borrower is "credit invisible" — no bureau record exists. '
-            'Traditional scoring cannot proceed.',
-            style: TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 12,
-              height: 1.5,
-              fontFamily: 'Inter',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Credify result view ───────────────────────────────────────────────────
-class _CredifyResultView extends StatelessWidget {
+class _ResultView extends StatelessWidget {
   final AnalyzeResponse result;
-  const _CredifyResultView({required this.result});
+  const _ResultView({required this.result});
 
   @override
   Widget build(BuildContext context) {
-    if (result.isNotAssessable || result.isLowConfidence) {
-      return _NotAssessableCard(result: result);
+    final t = context.tokens;
+
+    if (result.isNotAssessable) {
+      return GlassCard(
+        borderColor: t.negative.withValues(alpha: 0.35),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            StatusBadge(label: 'NOT ASSESSABLE', color: t.negative),
+            const SizedBox(height: 12),
+            Text(
+              'Not enough transaction history for a responsible assessment.',
+              style: TextStyle(
+                color: t.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              result.coverageReason ??
+                  'Credify refuses to guess when data coverage is too thin — a '
+                      'deliberate sufficiency gate, not a risk judgment.',
+              style: TextStyle(
+                  color: t.textSecondary, fontSize: 12.5, height: 1.5),
+            ),
+          ],
+        ),
+      );
     }
+
+    final scored = result.isScored;
+    final badgeColor = scored ? t.positive : t.warning;
+    final badgeLabel = scored ? 'SCORED' : 'LOW CONFIDENCE';
+
+    final reasons = <_Reason>[
+      ...result.reasonCodes.strengths
+          .map((r) => _Reason(item: r, positive: true)),
+      ...result.reasonCodes.concerns
+          .map((r) => _Reason(item: r, positive: false)),
+    ];
+    final maxAbs = reasons.isEmpty
+        ? 1.0
+        : reasons
+            .map((r) => r.item.contribution.abs())
+            .reduce((a, b) => a > b ? a : b);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Score gauge
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: ScoreGauge(
-              score: result.vitalityScore!,
-              band: result.band,
-              confidence: result.confidence,
-            ),
+        GlassCard(
+          margin: const EdgeInsets.only(bottom: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SectionLabel('Credify score'),
+                  StatusBadge(label: badgeLabel, color: badgeColor),
+                ],
+              ),
+              Center(
+                child: ScoreGauge(
+                  score: result.vitalityScore ?? 0,
+                  band: result.band,
+                  confidence: result.confidence,
+                ),
+              ),
+              if (result.coverageReason != null) ...[
+                const SizedBox(height: 14),
+                Text(
+                  result.coverageReason!,
+                  style: TextStyle(
+                      color: t.textSecondary, fontSize: 12.5, height: 1.5),
+                ),
+              ],
+            ],
           ),
         ),
-        const Divider(color: Color(0xFF2D3148), height: 32),
 
         // Affordability
-        _subHeader('Indicative EMI Affordability'),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _AffordabilityTile(
-                label: 'EMI Range',
-                value:
-                    '₹${_fmt(result.affordability.indicativeEmiLow)} – ₹${_fmt(result.affordability.indicativeEmiHigh)}',
-                icon: Icons.currency_rupee,
-                color: const Color(0xFF60A5FA),
+        GlassCard(
+          margin: const EdgeInsets.only(bottom: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SectionLabel('Indicative EMI affordability'),
+              Row(
+                children: [
+                  Expanded(
+                    child: _Metric(
+                      value:
+                          '₹${_fmt(result.affordability.indicativeEmiLow)} – ₹${_fmt(result.affordability.indicativeEmiHigh)}',
+                      label: 'EMI RANGE',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _Metric(
+                      value:
+                          '${result.affordability.monthsWouldCoverEmiOfLast24} / 24',
+                      label: 'MONTHS COVERED',
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _AffordabilityTile(
-                label: 'Months covered (last 24)',
-                value: '${result.affordability.monthsWouldCoverEmiOfLast24} / 24',
-                icon: Icons.calendar_month,
-                color: const Color(0xFF4ADE80),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const Divider(color: Color(0xFF2D3148), height: 32),
 
-        // Strengths
-        if (result.reasonCodes.strengths.isNotEmpty) ...[
-          _subHeader('Signal Strengths'),
-          const SizedBox(height: 8),
-          ...result.reasonCodes.strengths.map((s) => _ReasonTile(
-                item: s,
-                isStrength: true,
-              )),
-        ],
+        // Reason codes
+        if (reasons.isNotEmpty)
+          GlassCard(
+            margin: const EdgeInsets.only(bottom: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionLabel('Why this signal'),
+                for (var i = 0; i < reasons.length; i++)
+                  _ReasonRow(
+                    reason: reasons[i],
+                    maxAbs: maxAbs,
+                    showDivider: i > 0,
+                  ),
+              ],
+            ),
+          ),
 
-        // Concerns
-        if (result.reasonCodes.concerns.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          _subHeader('Areas of Concern'),
-          const SizedBox(height: 8),
-          ...result.reasonCodes.concerns.map((c) => _ReasonTile(
-                item: c,
-                isStrength: false,
-              )),
-        ],
+        // Exact additive decomposition — only present for SCORED results.
+        if (result.scoreBreakdown != null)
+          GlassCard(
+            margin: const EdgeInsets.only(bottom: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionLabel('How the score was built'),
+                ScoreWaterfall(
+                  breakdown: result.scoreBreakdown!,
+                  vitalityScore: result.vitalityScore,
+                ),
+              ],
+            ),
+          ),
 
-        const Divider(color: Color(0xFF2D3148), height: 32),
-
-        // Cashflow chart
-        _subHeader('24-Month Cashflow Trend'),
-        const SizedBox(height: 12),
-        CashflowChart(data: result.monthlyCashflow),
+        // Cashflow
+        GlassCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SectionLabel('24-month cashflow trend'),
+              CashflowChart(data: result.monthlyCashflow),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _subHeader(String text) => Text(
-        text,
-        style: const TextStyle(
-          color: Color(0xFFE5E7EB),
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          fontFamily: 'Inter',
-        ),
-      );
-
-  String _fmt(double v) {
+  static String _fmt(double v) {
     if (v >= 1000) return '${(v / 1000).toStringAsFixed(0)}k';
     return v.toStringAsFixed(0);
   }
 }
 
-// ── NOT_ASSESSABLE / LOW_CONFIDENCE honest explanation card ──────────────
-class _NotAssessableCard extends StatelessWidget {
-  final AnalyzeResponse result;
-  const _NotAssessableCard({required this.result});
-
-  @override
-  Widget build(BuildContext context) {
-    final isLow = result.isLowConfidence;
-    final color = isLow ? const Color(0xFFFBBF24) : const Color(0xFF6B7280);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: isLow ? const Color(0xFF292519) : const Color(0xFF1E2030),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.4), width: 1.2),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                isLow ? Icons.info_outline : Icons.block,
-                color: color,
-                size: 22,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  isLow
-                      ? 'Low-Confidence Signal — Manual Review Required'
-                      : 'Signal Not Assessable',
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            result.coverageReason ?? 'Insufficient data to generate a reliable signal.',
-            style: const TextStyle(
-              color: Color(0xFFD1D5DB),
-              fontSize: 13,
-              height: 1.6,
-              fontFamily: 'Inter',
-            ),
-          ),
-          if (isLow && result.vitalityScore != null) ...[
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1D2E),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.show_chart, color: Color(0xFFFBBF24), size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Indicative signal (low confidence):',
-                          style: TextStyle(
-                            color: Color(0xFF9CA3AF),
-                            fontSize: 11,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${result.vitalityScore!.toStringAsFixed(1)} / 100  ·  Band: ${_bandLabel(result.band)}',
-                          style: const TextStyle(
-                            color: Color(0xFFFBBF24),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 14),
-          const Text(
-            'Next step: refer to manual underwriting. Do not make a lending '
-            'decision based solely on this signal.',
-            style: TextStyle(
-              color: Color(0xFF6B7280),
-              fontSize: 11,
-              fontStyle: FontStyle.italic,
-              height: 1.5,
-              fontFamily: 'Inter',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _bandLabel(String? b) {
-    switch (b) {
-      case 'strong_candidate':
-        return 'Strong Candidate';
-      case 'manual_review':
-        return 'Manual Review';
-      case 'high_risk_referral':
-        return 'High-Risk Referral';
-      default:
-        return '—';
-    }
-  }
+class _Reason {
+  final ReasonItem item;
+  final bool positive;
+  const _Reason({required this.item, required this.positive});
 }
 
-// ── Helper widgets ────────────────────────────────────────────────────────
-class _StepCard extends StatelessWidget {
-  final String stepNumber;
-  final String title;
-  final Widget child;
+class _ReasonRow extends StatelessWidget {
+  final _Reason reason;
+  final double maxAbs;
+  final bool showDivider;
 
-  const _StepCard({
-    required this.stepNumber,
-    required this.title,
-    required this.child,
+  const _ReasonRow({
+    required this.reason,
+    required this.maxAbs,
+    required this.showDivider,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1D2E),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF2D3148), width: 1),
-      ),
+    final t = context.tokens;
+    final color = reason.positive ? t.positive : t.warning;
+    final contribution = reason.item.contribution;
+    // Bar length is relative to the strongest driver in this result — the raw
+    // log-odds contribution is printed separately so it is never read as a %.
+    final fraction = maxAbs == 0 ? 0.0 : (contribution.abs() / maxAbs).clamp(0.0, 1.0);
+
+    return Padding(
+      padding: EdgeInsets.only(top: showDivider ? 12 : 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (showDivider) ...[
+            Divider(color: t.hairline, height: 1),
+            const SizedBox(height: 12),
+          ],
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 26,
-                height: 26,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF6366F1),
-                  shape: BoxShape.circle,
-                ),
+              Expanded(
                 child: Text(
-                  stepNumber,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Inter',
+                  reason.item.statement,
+                  style: TextStyle(
+                    color: t.textPrimary,
+                    fontSize: 13,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
               const SizedBox(width: 10),
               Text(
-                title,
-                style: const TextStyle(
-                  color: Color(0xFFE5E7EB),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Inter',
+                '${contribution >= 0 ? '+' : ''}${contribution.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: color,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          child,
+          const SizedBox(height: 6),
+          Text(
+            'Feature: ${reason.item.feature}  ·  log-odds contribution',
+            style: TextStyle(color: t.textTertiary, fontSize: 11),
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: fraction,
+              minHeight: 5,
+              backgroundColor: t.hairline,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _AffordabilityTile extends StatelessWidget {
-  final String label;
+class _Metric extends StatelessWidget {
   final String value;
-  final IconData icon;
-  final Color color;
+  final String label;
 
-  const _AffordabilityTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
+  const _Metric({required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        color: t.hairline,
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              color: color,
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Inter',
+              color: t.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 11,
-              fontFamily: 'Inter',
-            ),
+            style: TextStyle(color: t.textSecondary, fontSize: 10),
           ),
         ],
       ),
     );
   }
 }
-
-class _ReasonTile extends StatelessWidget {
-  final ReasonItem item;
-  final bool isStrength;
-
-  const _ReasonTile({required this.item, required this.isStrength});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isStrength ? const Color(0xFF4ADE80) : const Color(0xFFFBBF24);
-    final icon = isStrength ? Icons.trending_up : Icons.warning_amber_outlined;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.statement,
-                  style: const TextStyle(
-                    color: Color(0xFFD1D5DB),
-                    fontSize: 13,
-                    height: 1.4,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  // contribution is an unbounded log-odds term (coefficient x z-score), not a fraction.
-                  'Feature: ${item.feature}  ·  Contribution: ${item.contribution >= 0 ? '+' : ''}${item.contribution.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 11,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorCard extends StatelessWidget {
-  final String message;
-  const _ErrorCard({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2D1515),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.4)),
-      ),
-      child: Text(
-        'Error: $message',
-        style: const TextStyle(color: Color(0xFFFCA5A5), fontSize: 13),
-      ),
-    );
-  }
-}
-
-Widget _sectionHeader(String text) => Text(
-      text,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 22,
-        fontWeight: FontWeight.w700,
-        fontFamily: 'Inter',
-      ),
-    );

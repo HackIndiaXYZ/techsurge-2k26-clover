@@ -54,6 +54,7 @@ from backend.contract.api_schema import (
     DISCLAIMER,
     Affordability,
     AnalyzeResponse,
+    ScoreBreakdown,
     Band,
     Confidence,
     MonthlyCashflow,
@@ -67,6 +68,7 @@ from backend.generator.schema import Profile
 from backend.model.artifact import (
     ARTIFACT_PATH,
     ScorecardArtifact,
+    compute_contributions,
     predict_default_probability,
     vitality_score_from_default_probability,
 )
@@ -175,6 +177,17 @@ def analyze_profile(
     vitality_score = vitality_score_from_default_probability(artifact, p_default)
     band = Band(artifact.band_cutoffs.band_for(p_default))
 
+    # Full additive decomposition, not just the ranked reason codes: the UI
+    # shows every predictive feature's push so the bars sum to the logit
+    # exactly rather than leaving an unexplained remainder.
+    contributions = compute_contributions(artifact, feature_values)
+    score_breakdown = ScoreBreakdown(
+        intercept=float(artifact.intercept),
+        contributions={k: float(v) for k, v in contributions.items()},
+        logit=float(artifact.intercept + sum(contributions.values())),
+        p_default=float(p_default),
+    )
+
     strengths, concerns = rank_reason_codes(artifact, feature_values)
     reason_codes = ReasonCodes(
         strengths=[
@@ -198,6 +211,7 @@ def analyze_profile(
         # at all (see above) -- the gate outcome already says what it would.
         confidence=Confidence.HIGH,
         reason_codes=reason_codes,
+        score_breakdown=score_breakdown,
         affordability=affordability,
         monthly_cashflow=monthly_cashflow,
         coverage_reason=None,

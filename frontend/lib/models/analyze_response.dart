@@ -55,6 +55,45 @@ class ReasonCodes {
       };
 }
 
+/// The exact additive decomposition behind a SCORED result.
+///
+/// `intercept + sum(contributions.values)` equals `logit` exactly, because the
+/// model is linear. That additivity is in LOG-ODDS space only — vitalityScore
+/// is a percentile rank of [pDefault], which is monotonic but not linear, so
+/// these values must never be shown as "points added to the score".
+class ScoreBreakdown {
+  final double intercept;
+  final Map<String, double> contributions;
+  final double logit;
+  final double pDefault;
+
+  const ScoreBreakdown({
+    required this.intercept,
+    required this.contributions,
+    required this.logit,
+    required this.pDefault,
+  });
+
+  factory ScoreBreakdown.fromJson(Map<String, dynamic> json) {
+    final raw = json['contributions'] as Map<String, dynamic>? ?? {};
+    return ScoreBreakdown(
+      intercept: (json['intercept'] as num?)?.toDouble() ?? 0.0,
+      contributions: raw.map(
+        (k, v) => MapEntry(k, (v as num?)?.toDouble() ?? 0.0),
+      ),
+      logit: (json['logit'] as num?)?.toDouble() ?? 0.0,
+      pDefault: (json['p_default'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'intercept': intercept,
+        'contributions': contributions,
+        'logit': logit,
+        'p_default': pDefault,
+      };
+}
+
 class Affordability {
   final double indicativeEmiLow;
   final double indicativeEmiHigh;
@@ -126,6 +165,7 @@ class AnalyzeResponse {
   final String? band; // "strong_candidate" | "manual_review" | "high_risk_referral" | null
   final String? confidence; // "high" | "low" | null
   final ReasonCodes reasonCodes;
+  final ScoreBreakdown? scoreBreakdown;
   final Affordability affordability;
   final List<MonthlyCashflow> monthlyCashflow;
   final String? coverageReason;
@@ -138,6 +178,7 @@ class AnalyzeResponse {
     this.band,
     this.confidence,
     required this.reasonCodes,
+    this.scoreBreakdown,
     required this.affordability,
     required this.monthlyCashflow,
     this.coverageReason,
@@ -159,6 +200,11 @@ class AnalyzeResponse {
       reasonCodes: ReasonCodes.fromJson(
         json['reason_codes'] as Map<String, dynamic>?,
       ),
+      scoreBreakdown: json['score_breakdown'] == null
+          ? null
+          : ScoreBreakdown.fromJson(
+              json['score_breakdown'] as Map<String, dynamic>,
+            ),
       affordability: Affordability.fromJson(
         json['affordability'] as Map<String, dynamic>?,
       ),
@@ -177,6 +223,7 @@ class AnalyzeResponse {
         'band': band,
         'confidence': confidence,
         'reason_codes': reasonCodes.toJson(),
+        'score_breakdown': scoreBreakdown?.toJson(),
         'affordability': affordability.toJson(),
         'monthly_cashflow': monthlyCashflow.map((e) => e.toJson()).toList(),
         'coverage_reason': coverageReason,
