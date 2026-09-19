@@ -203,6 +203,109 @@ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/api/profiles/does
 # 404
 ```
 
+## `POST /api/analyze-aggregate` — privacy architecture
+
+**A third submission path. `/api/analyze` and its `AnalyzeRequest` are
+unchanged and remain the contract for integrations that send full
+histories.**
+
+`/api/analyze` requires every transaction: date, amount, channel,
+counterparty, note. That is bank-level detail, and once it is transmitted it
+exists on this server to be logged, cached, subpoenaed or breached. This
+endpoint takes pre-computed aggregates instead — per-month totals and the 12
+feature values — so **no transaction-level data is transmitted or stored at
+all**. The caller computes the features on their own infrastructure; the raw
+trail never leaves it.
+
+This is a data-minimization argument, not a performance one. The response is
+the same `AnalyzeResponse`, produced by the same gate, the same model and
+the same reason codes (`_assemble_response` is literally shared between the
+two paths, and `backend/tests/test_analyze_aggregate.py` asserts byte-for-byte
+identical responses for every committed demo profile).
+
+### What the payload carries, and why three monthly numbers
+
+```json
+{
+  "profile_id": "lakshmi_vendor_001",
+  "months_available": 24,
+  "features": { "pct_weeks_with_income": 0.99, "income_coefficient_of_variation": 0.4087, "...": "..." },
+  "months": [
+    {"month": "2024-09", "real_transaction_count": 26,
+     "business_income": 51234.0, "gross_inflow": 58900.0, "gross_outflow": 41200.0}
+  ]
+}
+```
+
+`business_income` and `gross_inflow` are **not** the same aggregate and
+neither is derivable from the other (see `backend/common/cashflow.py`):
+
+| | `monthly_business_income` | `monthly_gross_cashflow` |
+|---|---|---|
+| Counterparties | `customer` only | every non-noise counterparty |
+| Reversals | signed — a reversal nets to zero | lands on the side it occurred |
+| Personal transfers | excluded | included |
+| Used for | the indicative EMI (a scoring input) | the lender's cashflow chart (display only) |
+
+Collapsing them would either push personal transfers into the score or make
+the chart disagree with the bank statement, so both are submitted.
+
+`real_transaction_count` replaces the density scan the sufficiency gate
+would otherwise run over the transaction list, and **must already exclude
+noise** (settlement sweeps, rounding adjustments) — a server that never sees
+the transactions cannot strip those itself.
+
+Every month of the window must be present in an unbroken run, **including
+months with no trading at all, submitted as zeros**. Omitting silent months
+would report a shorter, denser trail than the business has and could move it
+across the gate. A gap, a duplicate month, or a `months_available` that
+disagrees with the submitted months is a **422** from the request model's
+own validation.
+
+Features follow `FeatureSet`'s "None means not computable, never fabricate a
+zero" convention. A caller with under 24 months genuinely cannot compute
+`year_over_year_change` and must omit it or send `null` — sending `0.0`
+would read as "flat" and score very differently.
+
+### Known limitation — this minimizes disclosure, it does not verify input
+
+**The trust boundary moves, and not in the caller's favour.** On
+`/api/analyze` the server derives every feature itself, so a feature cannot
+disagree with the data behind it. Here the caller asserts both the features
+and the aggregates, and **the server cannot recompute either from what it
+was given**. Specifically, it cannot verify that:
+
+- the submitted features were actually computed from the submitted months;
+- the feature definitions used match `backend/features/feature_engine.py`'s
+  (an honest caller with a subtly different `expense_to_income_ratio` gets a
+  wrong score with no error);
+- `real_transaction_count` excludes noise as claimed, or corresponds to any
+  real transactions at all;
+- any of it describes a real business.
+
+The only cross-check that survives is the uniformity flag
+(`authenticity_check`), which is why `analyze_from_aggregates` runs it on
+every request regardless of gate outcome: a self-reported feature is easier
+to fabricate than a trail the server derived itself, so it matters more
+here, not less. It is still a weak check — it catches a trail that is
+implausibly smooth, and nothing else. A fabricated submission with realistic
+variance passes it.
+
+So this path is appropriate for a **trusted or accountable counterparty** —
+a bank, an Account Aggregator, a regulated intermediary computing features
+under an agreed spec — and not for anonymous public submission. Calling it
+"privacy-preserving" is accurate; calling it "trustless" would not be. A
+production version would need the caller to attest to the computation
+(signed aggregates from an accredited AA, or a zero-knowledge proof that the
+features were derived from a bank-signed statement). **Neither exists in
+this prototype**, and the endpoint should not be presented as if it did.
+
+```bash
+curl -s -X POST http://localhost:8000/api/analyze-aggregate \
+  -H 'Content-Type: application/json' \
+  -d @aggregates.json
+```
+
 ## Known integration gap — read before wiring up a frontend
 
 **Fixed by the endpoint above, but requires a frontend-side change to take
