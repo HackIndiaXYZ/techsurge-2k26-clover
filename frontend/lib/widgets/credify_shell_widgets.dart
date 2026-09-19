@@ -69,6 +69,15 @@ class GlassCard extends StatelessWidget {
   final Color? borderColor;
   final VoidCallback? onTap;
 
+  /// How long the fill and border take to reach a new value.
+  ///
+  /// Defaults to the theme crossfade, which is what this is for nearly
+  /// everywhere: the card's colours follow light/dark in step with the rest
+  /// of the shell. A caller that drives [borderColor] from something faster
+  /// than a theme change -- a hover, say -- should pass its own duration,
+  /// otherwise the edge lags the motion going in and lingers coming out.
+  final Duration transitionDuration;
+
   const GlassCard({
     super.key,
     required this.child,
@@ -77,6 +86,7 @@ class GlassCard extends StatelessWidget {
     this.radius = 24,
     this.borderColor,
     this.onTap,
+    this.transitionDuration = const Duration(milliseconds: 480),
   });
 
   @override
@@ -89,7 +99,7 @@ class GlassCard extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 480),
+          duration: transitionDuration,
           curve: _themeCurve,
           padding: padding,
           decoration: BoxDecoration(
