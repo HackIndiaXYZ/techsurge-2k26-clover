@@ -88,11 +88,22 @@ class ConsentScreen extends StatelessWidget {
               ),
               const SizedBox(height: 14),
 
-              // Wide screens spread the profiles across the full width; narrow
-              // ones keep them as a swipeable rail.
+              // Spread the profiles across the full width only when each one
+              // still gets enough room to read; otherwise fall back to the
+              // swipeable rail.
+              //
+              // This used to be a flat `width >= 820`, which was tuned when
+              // there were five profiles (~145px each). At seven that same
+              // width gives ~103px per card and the name, sector and coverage
+              // lines all collapse into ellipses. Deciding on per-card width
+              // instead means adding a profile can no longer silently crush
+              // the row.
               SizedBox(
                 height: 208,
-                child: MediaQuery.of(context).size.width >= 820
+                child: _fitsInARow(
+                  MediaQuery.of(context).size.width,
+                  state.availableProfileIds.length,
+                )
                     ? Row(
                         children: [
                           for (
@@ -211,6 +222,19 @@ class ConsentScreen extends StatelessWidget {
     );
   }
 
+  /// Narrowest a persona card may get before the row stops being readable.
+  /// Below this the rail is the better answer — a card the user can swipe to
+  /// beats seven they cannot read.
+  static const _minPersonaCardWidth = 190.0;
+
+  /// Mirrors the layout constants used above: 20px page padding either side
+  /// and a 14px gap between cards.
+  static bool _fitsInARow(double screenWidth, int count) {
+    if (count == 0) return true;
+    final available = screenWidth - 40 - (count - 1) * 14;
+    return available / count >= _minPersonaCardWidth;
+  }
+
   Widget _divider(CredifyTokens t) =>
       Container(width: 1, height: 26, color: t.hairline);
 
@@ -254,6 +278,7 @@ class _PersonaCard extends StatelessWidget {
     'thin_file_002': '4 months · 38 transactions',
     'meera_tailor_005': '24 months · 1,916 transactions',
     'arjun_kirana_006': '24 months · 3,927 transactions',
+    'uniform_trail_007': '24 months · 624 transactions',
   };
 
   @override

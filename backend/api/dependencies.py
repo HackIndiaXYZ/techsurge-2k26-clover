@@ -42,6 +42,7 @@ DEMO_PROFILES: dict[str, str] = {
     "ramesh_carpentry_004": "demo_profile_ramesh_carpentry.json",
     "meera_tailor_005": "demo_profile_meera_tailor.json",
     "arjun_kirana_006": "demo_profile_arjun_kirana.json",
+    "uniform_trail_007": "demo_profile_uniform_trail.json",
 }
 
 _artifact: ScorecardArtifact | None = None

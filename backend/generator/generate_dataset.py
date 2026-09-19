@@ -914,6 +914,146 @@ def build_demo_profile_arjun_kirana() -> Profile:
     return profile
 
 
+def build_demo_profile_uniform_trail() -> Profile:
+    """A FABRICATED trail: what a templated or machine-generated bank
+    statement looks like, not a real business.
+
+    Every other demo profile here represents a genuine MSME. This one does
+    not, and nothing in the product should present it as one. It exists so
+    the data-pattern check (backend/model/authenticity.py) can be shown
+    firing -- no real profile in this dataset trips it, by design, since the
+    floor was calibrated to sit below all of them.
+
+    WHY IT IS BUILT BY HAND INSTEAD OF THROUGH build_profile
+    --------------------------------------------------------
+    build_profile cannot produce this shape at any parameter setting. Its
+    `volatility` knob is DAILY multiplicative noise, while monthly income CV
+    is dominated by seasonality -- the monsoon dip, festival bumps and
+    wedding season are applied per-day inside generate_income_days and
+    survive any amount of daily smoothing. demo_lakshmi proves it: the
+    tightest volatility in the generator (0.06) still lands at CV 0.409.
+
+    That is precisely the tell this profile embodies. A real Indian MSME's
+    monthly income cannot be flat, because the calendar will not let it. A
+    forged statement generated from a monthly template has no reason to know
+    that, so it comes out unnaturally even -- which is what the check reads.
+
+    Deliberately kept plausible in every OTHER respect: it clears the
+    sufficiency gate, pays its bills on time, carries a healthy margin and
+    scores well. A fabrication that also looked weak would prove nothing --
+    the point of the demo is that a forged trail can satisfy the model and
+    still be caught by the one signal that is not about creditworthiness.
+
+    The +/-1.5% jitter is intentional. A perfectly identical monthly total
+    (CV exactly 0.0) would be a strawman; a little noise is what a competent
+    forgery looks like, and it still lands an order of magnitude under the
+    0.08 floor.
+    """
+    rng = random.Random(777)
+
+    end = HISTORY_END_DATE
+    start = add_months(end, -TOTAL_MONTHS) + timedelta(days=1)
+    split_date = add_months(start, SEEN_MONTHS)
+
+    # One month's template, repeated. Amounts are in the same range as the
+    # kirana_store archetype so it does not stand out on the cashflow chart.
+    income_per_month = 150_000.0
+    income_txns_per_month = 20
+    rent, utility = 9_000.0, 2_200.0
+    supplier_payment, supplier_payments_per_month = 18_000.0, 4
+
+    def jitter() -> float:
+        return rng.uniform(0.985, 1.015)
+
+    # A whisper of growth (+0.3%/month). Without it, year-over-year change is
+    # pure jitter noise around zero and the reason-code template renders the
+    # faintly absurd "Income is down 0% ... shrinking". A forged statement
+    # would plausibly template in mild growth anyway, and 7% of drift across
+    # 24 months is nowhere near enough to lift the CV off the floor.
+    monthly_growth = 0.003
+
+    txns: list[Transaction] = []
+    month_index = 0
+    cur = date(start.year, start.month, 1)
+    while cur <= end:
+        month_total = income_per_month * ((1 + monthly_growth) ** month_index) * jitter()
+        month_index += 1
+        per_txn = month_total / income_txns_per_month
+        for i in range(income_txns_per_month):
+            # Spread across the whole month rather than the first 20 days, so
+            # every week carries income. Bunching it early left a dead week
+            # each month, which read as a patchy rhythm -- a real weakness,
+            # and not the one this profile is meant to demonstrate.
+            day = min(1 + (i * 28) // income_txns_per_month, 28)
+            d = date(cur.year, cur.month, day)
+            if not (start <= d <= end):
+                continue
+            txns.append(
+                Transaction(
+                    date=d,
+                    direction=Direction.IN,
+                    amount=round(per_txn, 2),
+                    channel=Channel.UPI,
+                    counterparty_type=CounterpartyType.CUSTOMER,
+                    category="sales",
+                )
+            )
+
+        for amount, ctype, category in (
+            (rent, CounterpartyType.RENT, "rent"),
+            (utility, CounterpartyType.UTILITY, "electricity_bill"),
+        ):
+            d = date(cur.year, cur.month, 5)
+            if start <= d <= end:
+                txns.append(
+                    Transaction(
+                        date=d,
+                        direction=Direction.OUT,
+                        amount=round(amount * jitter(), 2),
+                        channel=Channel.NEFT,
+                        counterparty_type=ctype,
+                        category=category,
+                    )
+                )
+
+        for i in range(supplier_payments_per_month):
+            d = date(cur.year, cur.month, min(7 + i * 7, 28))
+            if start <= d <= end:
+                txns.append(
+                    Transaction(
+                        date=d,
+                        direction=Direction.OUT,
+                        amount=round(supplier_payment * jitter(), 2),
+                        channel=Channel.NEFT,
+                        counterparty_type=CounterpartyType.SUPPLIER,
+                        category="raw_material",
+                    )
+                )
+
+        cur = add_months(cur, 1)
+
+    txns.sort(key=lambda t: t.date)
+
+    meta = ProfileMeta(
+        profile_id="demo_uniform_trail",
+        archetype=Archetype.KIRANA_STORE,
+        latent_health_tier=HealthTier.STABLE,
+        is_cash_heavy_edge_case=False,
+        is_short_history_edge_case=False,
+        history_start_date=start,
+        history_end_date=end,
+        months_available=TOTAL_MONTHS,
+        split=SplitInfo(
+            seen_months=SEEN_MONTHS, holdout_months=HOLDOUT_MONTHS, split_date=split_date
+        ),
+    )
+    return Profile(
+        meta=meta,
+        transactions_seen=[t for t in txns if t.date < split_date],
+        transactions_holdout=[t for t in txns if t.date >= split_date],
+    )
+
+
 def build_demo_profile_dormancy_gap() -> Profile:
     """Hand-tuned demo profile: kirana_store, failing, with one long
     (60-day) dormancy gap carved into the middle of the seen window.
@@ -1009,6 +1149,7 @@ def main() -> None:
     dormancy_json = build_demo_profile_dormancy_gap().model_dump_json(indent=2, exclude_none=False)
     meera_json = build_demo_profile_meera_tailor().model_dump_json(indent=2, exclude_none=False)
     arjun_json = build_demo_profile_arjun_kirana().model_dump_json(indent=2, exclude_none=False)
+    uniform_json = build_demo_profile_uniform_trail().model_dump_json(indent=2, exclude_none=False)
 
     # Demo profiles go only to data/, never out_dir: out_dir is the training
     # population build_feature_table globs, and these are hand-tuned fixtures.
@@ -1020,6 +1161,7 @@ def main() -> None:
     (committed_dir / "demo_profile_dormancy_gap.json").write_text(dormancy_json)
     (committed_dir / "demo_profile_meera_tailor.json").write_text(meera_json)
     (committed_dir / "demo_profile_arjun_kirana.json").write_text(arjun_json)
+    (committed_dir / "demo_profile_uniform_trail.json").write_text(uniform_json)
     if sample_profile_json is not None:
         (committed_dir / "sample_profile.json").write_text(sample_profile_json)
 

@@ -226,13 +226,20 @@ class HeroPill extends StatelessWidget {
             children: [
               Icon(icon, size: 13, color: t.accentA),
               const SizedBox(width: 7),
-              Text(
-                label,
-                style: TextStyle(
-                  color: t.accentA,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
+              // Flexible, not a bare Text: the Row is mainAxisSize.min, so a
+              // label longer than the screen has nothing to shrink and
+              // overflows instead. Same fix CredifyButton already carries.
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: t.accentA,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                  ),
                 ),
               ),
             ],
