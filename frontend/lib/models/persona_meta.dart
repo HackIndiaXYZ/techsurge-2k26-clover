@@ -44,6 +44,15 @@ class PersonaMeta {
       name: 'Arjun',
       sector: 'Kirana store',
     ),
+    // NOT a borrower. This entry stands for a submitted statement that was
+    // machine-generated, and the sector line says so outright: every other
+    // card in the rail represents a real MSME, and this one must never be
+    // mistaken for a seventh.
+    'uniform_trail_007': PersonaMeta(
+      icon: Icons.copy_all_outlined,
+      name: 'Uniform Trail',
+      sector: 'Fabricated — data-integrity demo',
+    ),
   };
 
   static PersonaMeta forId(String id) {
