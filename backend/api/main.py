@@ -23,6 +23,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.dependencies import get_artifact, get_demo_profiles, get_metrics, load_state
 from backend.contract.api_schema import (
+    AnalyzeAggregateRequest,
     AnalyzeRequest,
     AnalyzeResponse,
     BandDistribution,
@@ -31,7 +32,7 @@ from backend.contract.api_schema import (
 )
 from backend.generator.schema import Archetype, HealthTier, Profile, ProfileMeta, SplitInfo
 from backend.model.artifact import ScorecardArtifact
-from backend.model.scorecard import analyze_profile
+from backend.model.scorecard import analyze_from_aggregates, analyze_profile
 
 
 @asynccontextmanager
@@ -162,6 +163,35 @@ def post_analyze(
     """
     profile = _request_to_profile(request)
     return analyze_profile(profile, artifact=artifact)
+
+
+@app.post("/api/analyze-aggregate", response_model=AnalyzeResponse)
+def post_analyze_aggregate(
+    request: AnalyzeAggregateRequest, artifact: ScorecardArtifact = Depends(get_artifact)
+) -> AnalyzeResponse:
+    """Scores a profile from caller-computed aggregates -- no transaction data.
+
+    A third submission path alongside POST /api/analyze and
+    GET /api/profiles/{profile_id}, strictly additive: /api/analyze and its
+    AnalyzeRequest are untouched and stay the contract for integrations that
+    do send full histories.
+
+    WHY THE NAME: "-aggregate" describes what the caller sends, which is the
+    only thing that differs. The response model, the gate, the model and the
+    reason codes are identical to /api/analyze, so naming it after a
+    privacy posture ("/api/analyze-private") would oversell it -- see the
+    Privacy architecture section of backend/api/README.md. This endpoint
+    minimizes DISCLOSURE; it cannot verify the aggregates it is handed.
+
+    Malformed bodies never reach this function: FastAPI validates against
+    AnalyzeAggregateRequest first and returns 422 itself, including for the
+    window checks that model enforces (a gap in the month run, a duplicate
+    month, or months_available disagreeing with the months submitted).
+
+    As with /api/analyze, a LOW_CONFIDENCE / NOT_ASSESSABLE result is not an
+    error -- it comes back as a correctly-shaped response, not a 4xx.
+    """
+    return analyze_from_aggregates(request, artifact=artifact)
 
 
 @app.get("/api/portfolio", response_model=PortfolioResponse)
