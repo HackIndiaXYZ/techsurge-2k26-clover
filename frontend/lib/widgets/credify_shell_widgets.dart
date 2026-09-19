@@ -310,7 +310,19 @@ class SlideToAuthorize extends StatefulWidget {
 }
 
 class _SlideToAuthorizeState extends State<SlideToAuthorize> {
+  /// Outer height of the pill.
   static const _track = 56.0;
+
+  /// The thumb is deliberately smaller than the track and inset from it.
+  ///
+  /// It used to be exactly [_track], which does not fit: the track Container
+  /// carries a 1px border, so the Stack it wraps is only 54px tall and 2px
+  /// narrower than its own constraints. A 56px circle inside that overhangs
+  /// the rounded edge on every side, and at full travel it pushed past the
+  /// right end as well, because maxDrag was measured against the OUTER width.
+  static const _thumb = 48.0;
+  static const _inset = (_track - 2 - _thumb) / 2; // 1px border top and bottom
+
   double _pos = 0;
   bool _done = false;
 
@@ -345,7 +357,9 @@ class _SlideToAuthorizeState extends State<SlideToAuthorize> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxDrag = constraints.maxWidth - _track;
+        // Travel is measured inside the border (hence -2) and stops an equal
+        // inset short of the right end, so the thumb lands symmetrically.
+        final maxDrag = constraints.maxWidth - 2 - _thumb - _inset * 2;
         return Container(
           height: _track,
           decoration: BoxDecoration(
@@ -357,7 +371,9 @@ class _SlideToAuthorizeState extends State<SlideToAuthorize> {
             children: [
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.only(left: _track),
+                  // Clear the thumb's full footprint so the label stays
+                  // centred in the space that is actually left over.
+                  padding: const EdgeInsets.only(left: _thumb + _inset * 2),
                   child: Text(
                     widget.label,
                     maxLines: 1,
@@ -373,7 +389,8 @@ class _SlideToAuthorizeState extends State<SlideToAuthorize> {
               AnimatedPositioned(
                 duration: Duration(milliseconds: _pos == 0 ? 280 : 0),
                 curve: const Cubic(0.22, 1, 0.36, 1),
-                left: _pos,
+                left: _inset + _pos,
+                top: _inset,
                 child: GestureDetector(
                   onHorizontalDragUpdate: (d) {
                     setState(() {
@@ -389,8 +406,8 @@ class _SlideToAuthorizeState extends State<SlideToAuthorize> {
                     }
                   },
                   child: Container(
-                    width: _track,
-                    height: _track,
+                    width: _thumb,
+                    height: _thumb,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: t.accentGradient,
